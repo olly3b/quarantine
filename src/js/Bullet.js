@@ -20,6 +20,7 @@ Bullet.prototype.update = function(monsters, step, map) {
 			if (this.x > monsters[m].x - monsters[m].width / 2 && this.x < monsters[m].x + monsters[m].width / 2) {
 				if (this.y > monsters[m].y - monsters[m].height / 2 && this.y < monsters[m].y + monsters[m].height / 2) {
 					monsters[m].alive = false;
+					this.alive = false;
 				}
 			}
 		}

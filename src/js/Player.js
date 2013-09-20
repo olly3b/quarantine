@@ -15,6 +15,7 @@ function Player(x, y, image) {
 	this.fireDelay = false;
 	this.fireCounter = 0;
 	this.fireRate = 20;
+	this.sight = 400;
 }
 
 Player.prototype.draw = function(context) {
@@ -31,7 +32,7 @@ Player.prototype.setPath = function(path) {
 }
 
 Player.prototype.controlUpdate = function(step, viewport, map) {
-	this.angle = Math.atan2((controls.mouseY + viewport.y) - this.y, (controls.mouseX + viewport.x) - this.x);
+	this.angle = Math.atan2((controls.mouseY + viewport.y) - this.y - (this.height / 2), (controls.mouseX + viewport.x) - this.x - (this.width / 2));
 
 	this.angle = this.angle * (180/Math.PI); 
 	this.angle -= 90;
@@ -103,7 +104,7 @@ Player.prototype.update = function(step, mainViewPort, pathFinder, monsters) {
 			return true;
 		}
 	}
-	
+
 	this.fireCounter++;
 	if (this.fireCounter >= this.fireRate) {		
 		this.fireDelay = false;
@@ -176,9 +177,11 @@ Player.prototype.findClosestMonster = function(monsters) {
 	    		c = m;
 	    	}
 		}
+	}
 
+	if (h < this.sight) {
 		return c;
-		}
+	}
 
 	return null;
 }
