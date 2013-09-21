@@ -59,12 +59,12 @@ window.Game = {};
     	playerViewPortTwo.update(map);    	
 
     	if (mainViewport.focus.controlUpdate(STEP, mainViewport, map)) {
-    		bullets[bullets.length] = new Bullet(mainViewport.focus, Math.cos(mainViewport.focus.angle + 1.5), Math.sin(mainViewport.focus.angle + 1.5));
+    		bullets[bullets.length] = new Bullet(mainViewport.focus, Math.cos(mainViewport.focus.angle + 1.57079633), Math.sin(mainViewport.focus.angle + 1.57079633));
     	}
 
     	for (var p = 0; p < players.length; p++) {
     		if (players[p].update(STEP, mainViewport, pathFinder, monsters)) {
-    			bullets[bullets.length] = new Bullet(players[p], Math.cos(players[p].angle + 1.5), Math.sin(players[p].angle + 1.5));
+    			bullets[bullets.length] = new Bullet(players[p], Math.cos(players[p].angle + 1.57079633), Math.sin(players[p].angle + 1.57079633));
     		}
     	}
     	
@@ -120,9 +120,15 @@ window.Game = {};
     	drawContext.drawImage(gameCanvas, playerViewPortOne.x, playerViewPortOne.y, playerViewPortOne.width, playerViewPortOne.height, playerViewPortOne.posX, playerViewPortOne.posY, playerViewPortOne.width, playerViewPortOne.height);
     	drawContext.drawImage(gameCanvas, playerViewPortTwo.x, playerViewPortTwo.y, playerViewPortTwo.width, playerViewPortTwo.height, playerViewPortTwo.posX, playerViewPortTwo.posY, playerViewPortTwo.width, playerViewPortTwo.height);    	
      
-     	drawContext.fillStyle = '#FF00FF';
+     	drawContext.fillStyle = '#0000FF';
     	drawContext.fillRect(645, 205, 50, 20);
     	drawContext.fillRect(645, 445, 50, 20);
+
+        drawContext.strokeStyle = '#FF0000';
+        drawContext.beginPath();
+        drawContext.arc(controls.mouseX, controls.mouseY, 5, 0, Math.PI * 2, false);
+        drawContext.closePath();
+        drawContext.stroke();
 
       	if (debugOn) { debug(); }
     }

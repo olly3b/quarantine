@@ -21,6 +21,7 @@ function Player(x, y, image) {
 Player.prototype.draw = function(context) {
 	context.save();
 	context.translate(this.x, this.y);
+	context.translate(this.width / 2, this.height / 2);
 	context.rotate(this.angle); 	
 	context.drawImage(this.image, -this.width / 2, -this.height / 2, 32, 32);	
 	context.restore();
@@ -57,8 +58,8 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 
 	 		switch(tile) {		 			
 	 			case 1:	
-	 				if (this.x < (ax * 32) + 48 && ax * 32 < this.x + this.width / 2) {
-	 					if (this.y < (ay * 32) + 48 && ay * 32 < this.y + this.height /2) {		 									 								 								 								 				
+	 				if (this.x + 32 > ax * 32 && this.x < (ax * 32) + 32) {
+	 					if (this.y + 32 > ay * 32 && this.y < (ay * 32) + 32) {		 									 								 								 								 				
 	 						this.x = oldX;
 	 					}		 								 					
 	 				}	 			
@@ -79,8 +80,8 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 
 	 		switch(tile) {		 			
 	 			case 1:	
-	 				if (this.x < (ax * 32) + 48 && ax * 32 < this.x + this.width / 2) {
-	 					if (this.y < (ay * 32) + 48 && ay * 32 < this.y + this.height / 2) {		 									 								 								 								 				
+	 				if (this.x  + 32 > ax * 32 && this.x < (ax * 32) + 32) {
+	 					if (this.y + 32 > ay * 32 && this.y < (ay * 32) + 32) {		 				 									 								 								 								 				
 	 						this.y = oldY;
 	 					}		 								 					
 	 				}	 			
@@ -188,7 +189,9 @@ Player.prototype.findClosestMonster = function(monsters) {
 
 
 Player.prototype.faceMonster = function(x, y) {
-	this.angle = Math.atan2((y - this.y) + this.height / 2, (x - this.x) + this.width / 2);
+	//this.angle = Math.atan2((y - this.y) - this.height / 2, (x - this.x) - this.width / 2);
+	this.angle = Math.atan2(y - (this.y + this.height / 2), x - (this.x + this.width / 2));
+	//this.angle = Math.atan2((y - this.y), (x - this.x));
 
 	this.angle = this.angle * (180/Math.PI); 
 	this.angle -= 90;

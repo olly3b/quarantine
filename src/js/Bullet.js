@@ -1,6 +1,6 @@
 function Bullet(player, vx, vy) {
-	this.x = player.x;
-	this.y = player.y;
+	this.x = player.x + player.width / 2;
+	this.y = player.y + player.height / 2;
 	this.vx = vx;
 	this.vy = vy;
 	this.speed = 500;
@@ -33,8 +33,8 @@ Bullet.prototype.update = function(monsters, step, map) {
 
 	 		switch(tile) {		 			
 	 			case 1:	
-	 				if (this.x < (ax * 32) + 48 && ax * 32 < this.x + this.size / 2) {
-	 					if (this.y < (ay * 32) + 48 && ay * 32 < this.y + this.size /2) {		 									 								 								 								 				
+	 				if (this.x > ax * 32 && this.x < (ax * 32) + 32) {
+	 					if (this.y > ay * 32 && this.y < (ay * 32) + 32) { // + this.size /2) {		 									 								 								 								 				
 	 						this.alive = false;
 	 					}		 								 					
 	 				}	 			
