@@ -3,7 +3,7 @@ function Spawner(x, y) {
 	this.y = y;
 
 	this.counter = 0;
-	this.frequency = 180;
+	this.frequency = 60;
 	this.amount = 10;
 }
 
