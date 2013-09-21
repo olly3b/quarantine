@@ -18,122 +18,156 @@ window.Game = {};
     var STEP = INTERVAL/1000 // seconds
 
     var map = new Map(1280, 960, 'img/map.png');
-
-    var players = new Array();
-    players.push(new Player (160, 120, 'img/player.png'));
-    players.push(new Player (480, 120, 'img/player.png'));
-    players.push(new Player (480, 360, 'img/player.png'));
     
     var mainViewport = new Viewport(0, 0, 640, 480);
     var playerViewPortOne = new Viewport (645, 0, 200, 200);
     var playerViewPortTwo = new Viewport (645, 240, 200, 200);
 
+    var players = new Array();
     var monsters = new Array();
-    monsters.push(new Monster(64, 450, 'img/monster.png'));
-    monsters.push(new Monster(640, 400, 'img/monster.png'));
-    monsters.push(new Monster(550, 64, 'img/monster.png'));
-
     var bullets = new Array();
+    var spawners = new Array();  
 
-    var debugOn = false;
+    var pathFinder = new PathFinder(map.dynamicMap);;
 
-    mainViewport.focus = players[0];
-    players[0].focus = true;
-    playerViewPortOne.focus = players[1];
-    playerViewPortTwo.focus = players[2];
-
-    var pathFinder = null;
-
-    pathFinder = new PathFinder(map.dynamicMap);
-  
-	var spawners = new Array();
 	spawners.push(new Spawner(1, 1));
 	spawners.push(new Spawner(19, 14));
 	spawners.push(new Spawner(19, 1));
 	spawners.push(new Spawner(1, 14));
 
+    var debugOn = false;
+
     // Game update function
     var update = function(){
-    	mainViewport.update(map);    	
-    	playerViewPortOne.update(map);
-    	playerViewPortTwo.update(map);    	
+    	updateViewPorts();
+        updateControlledPlayer();
+        updateAIPlayers();    	
+        updateMonsters();    	
+    	updateBullets();
+    	updateSpawners();	
+    }
 
-    	if (mainViewport.focus.controlUpdate(STEP, mainViewport, map)) {
-    		bullets[bullets.length] = new Bullet(mainViewport.focus, Math.cos(mainViewport.focus.angle + 1.57079633), Math.sin(mainViewport.focus.angle + 1.57079633));
-    	}
+    Game.initialiseGame = function() {
+        players.push(new Player (160, 120, 'img/player.png'));
+        players.push(new Player (480, 120, 'img/player.png'));
+        players.push(new Player (480, 360, 'img/player.png'));
 
-    	for (var p = 0; p < players.length; p++) {
-    		if (players[p].update(STEP, mainViewport, pathFinder, monsters)) {
-    			bullets[bullets.length] = new Bullet(players[p], Math.cos(players[p].angle + 1.57079633), Math.sin(players[p].angle + 1.57079633));
-    		}
-    	}
-    	
-    	if (monsters.length != 0) {
-    		for (var m = 0; m < monsters.length; m++) {
-    			monsters[m].update(STEP, players, pathFinder);
-    			if (monsters[m].alive == false) {
-    				monsters.splice(m, 1);
-    			}
-    		}
-    	}
+        mainViewport.focus = players[0];
+        players[0].focus = true;
+        playerViewPortOne.focus = players[1];
+        playerViewPortTwo.focus = players[2];
+    }
 
-    	if (bullets.length != 0) {
-	    	for (var i = 0; i < bullets.length; i++) {
-				bullets[i].update(monsters, STEP, map);
-				if (bullets[i].alive == false) {
-					bullets.splice(i, 1);
-				}
-			}
-		}
+    var updateViewPorts = function() {
+        mainViewport.update(map);       
+        playerViewPortOne.update(map);
+        playerViewPortTwo.update(map);      
+    }
 
-		for (var s = 0; s < spawners.length; s++) {
-			if (spawners[s].update()) {
-				monsters.push(new Monster(spawners[s].x * 32 + 16, spawners[s].y * 32 + 16, 'img/monster.png'))
-			}
-		}		
+    var updateControlledPlayer = function() {
+        if (mainViewport.focus.controlUpdate(STEP, mainViewport, map)) {
+            bullets[bullets.length] = new Bullet(mainViewport.focus, Math.cos(mainViewport.focus.angle + 1.57079633), Math.sin(mainViewport.focus.angle + 1.57079633));
+        }
     }
         
+    var updateAIPlayers = function() {
+        for (var p = 0; p < players.length; p++) {
+            if (players[p].update(STEP, mainViewport, pathFinder, monsters)) {
+                bullets[bullets.length] = new Bullet(players[p], Math.cos(players[p].angle + 1.57079633), Math.sin(players[p].angle + 1.57079633));
+            }
+        }
+    }
+
+    var updateMonsters = function() {
+        if (monsters.length != 0) {
+            for (var m = 0; m < monsters.length; m++) {
+                monsters[m].update(STEP, players, pathFinder);
+                if (monsters[m].alive == false) {
+                    monsters.splice(m, 1);
+                }
+            }
+        }
+    }
+
+    var updateBullets = function() {
+        if (bullets.length != 0) {
+            for (var i = 0; i < bullets.length; i++) {
+                bullets[i].update(monsters, STEP, map);
+                if (bullets[i].alive == false) {
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+    }
+
+    var updateSpawners = function() {
+        for (var s = 0; s < spawners.length; s++) {
+            if (spawners[s].update()) {
+                monsters.push(new Monster(spawners[s].x * 32 + 16, spawners[s].y * 32 + 16, 'img/monster.png'))
+            }
+        }       
+    }
+
     // Game draw function
-    var draw = function(){
-        // clear the entire canvas
+    var draw = function() {
+        clearCanvas();        
+      	map.draw(context);
+        drawPlayers();
+        drawMonsters();
+        drawBullets();
+        drawViewPorts();
+        drawButtons();
+        drawCursor();
+
+      	if (debugOn) { drawDebug(); }
+    }
+
+    var clearCanvas = function() {
         drawContext.clearRect(0, 0, canvas.width, canvas.height);  
         context.clearRect(0, 0, canvas.width, canvas.height);  
-        
-        // redraw all objects        
-      	map.draw(context);
+    }
 
-      	for (var p = 0; p < players.length; p++) {
-    		players[p].draw(context);
-    	}     
+    var drawPlayers = function() {
+        for (var p = 0; p < players.length; p++) {
+            players[p].draw(context);
+        }     
+    }
 
-      	for (var i = 0; i < monsters.length; i++) {
-      		monsters[i].draw(context);
-      	}
+    var drawMonsters = function() {
+        for (var i = 0; i < monsters.length; i++) {
+            monsters[i].draw(context);
+        }
+    }
 
-      	if (bullets != null) {
-      		for (var i = 0; i < bullets.length; i++) {
-				bullets[i].draw(context, map);
-			}
-		}
+    var drawBullets = function() {
+        if (bullets != null) {
+            for (var i = 0; i < bullets.length; i++) {
+                bullets[i].draw(context, map);
+            }
+        }
+    }
 
-		drawContext.drawImage(gameCanvas, mainViewport.x, mainViewport.y, mainViewport.width, mainViewport.height, mainViewport.posX, mainViewport.posY, mainViewport.width, mainViewport.height);
-    	drawContext.drawImage(gameCanvas, playerViewPortOne.x, playerViewPortOne.y, playerViewPortOne.width, playerViewPortOne.height, playerViewPortOne.posX, playerViewPortOne.posY, playerViewPortOne.width, playerViewPortOne.height);
-    	drawContext.drawImage(gameCanvas, playerViewPortTwo.x, playerViewPortTwo.y, playerViewPortTwo.width, playerViewPortTwo.height, playerViewPortTwo.posX, playerViewPortTwo.posY, playerViewPortTwo.width, playerViewPortTwo.height);    	
-     
-     	drawContext.fillStyle = '#0000FF';
-    	drawContext.fillRect(645, 205, 50, 20);
-    	drawContext.fillRect(645, 445, 50, 20);
+    var drawViewPorts = function() {
+        drawContext.drawImage(gameCanvas, mainViewport.x, mainViewport.y, mainViewport.width, mainViewport.height, mainViewport.posX, mainViewport.posY, mainViewport.width, mainViewport.height);
+        drawContext.drawImage(gameCanvas, playerViewPortOne.x, playerViewPortOne.y, playerViewPortOne.width, playerViewPortOne.height, playerViewPortOne.posX, playerViewPortOne.posY, playerViewPortOne.width, playerViewPortOne.height);
+        drawContext.drawImage(gameCanvas, playerViewPortTwo.x, playerViewPortTwo.y, playerViewPortTwo.width, playerViewPortTwo.height, playerViewPortTwo.posX, playerViewPortTwo.posY, playerViewPortTwo.width, playerViewPortTwo.height);      
+    }
 
+    var drawButtons = function() {
+        drawContext.fillStyle = '#0000FF';
+        drawContext.fillRect(645, 205, 50, 20);
+        drawContext.fillRect(645, 445, 50, 20);
+    }
+
+    var drawCursor = function() {
         drawContext.strokeStyle = '#FF0000';
         drawContext.beginPath();
         drawContext.arc(controls.mouseX, controls.mouseY, 5, 0, Math.PI * 2, false);
         drawContext.closePath();
         drawContext.stroke();
-
-      	if (debugOn) { debug(); }
     }
 
-    var debug = function() {
+    var drawDebug = function() {
 	  	//drawContext.fillText('x: ' + Math.floor(mainViewport.x) + ' y: ' + Math.floor(mainViewport.y), 10, 10);
 	   	//drawContext.fillText('x: ' + Math.floor(playerViewPortOne.x) + ' y: ' + Math.floor(playerViewPortOne.y), 645, 10);      	
 	  	//drawContext.fillText('x: ' + Math.floor(playerViewPortTwo.x) + ' y: ' + Math.floor(playerViewPortTwo.y), 645, 175);
@@ -227,6 +261,7 @@ window.Game = {};
 
 // start the game when page is loaded
 window.onload = function(){    
+    Game.initialiseGame();
 	Game.play();
 }
 
