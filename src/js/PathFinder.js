@@ -5,11 +5,15 @@ function PathFinder(map) {
 PathFinder.prototype.findPath = function(object, target) {
     // Initialise pathfinder
 
-    startVectorX = Math.floor(object.x / 32);
-    startVectorY = Math.floor(object.y / 32);
+    startVectorX = Math.floor((object.x + 1) / 32);
+    startVectorY = Math.floor((object.y + 1) / 32);
 
-    destVectorX = Math.floor(target.x / 32);
-    destVectorY = Math.floor(target.y / 32);
+    destVectorX = Math.floor((target.x + 1) / 32);
+    destVectorY = Math.floor((target.y + 1) / 32);
+
+    //destVectorX = Math.floor(target.x / 32);
+    //destVectorY = Math.floor(target.y / 32);
+
 
     var closedList = new Array();
     var openList = new Array();
@@ -18,7 +22,7 @@ PathFinder.prototype.findPath = function(object, target) {
 
     // Find path
 
-    for (var attempts = 0; attempts < 10000; attempts++) {
+    for (var attempts = 0; attempts < 500000; attempts++) {
 
         var currentNode = closedList[closedList.length - 1]; // Make the currentNode the last one added to the closed list
         var adjacentNodes = this.findAdjacentNodes(currentNode, destVectorX, destVectorY); // Final adjacent nodes
@@ -47,7 +51,7 @@ PathFinder.prototype.findPath = function(object, target) {
             }
 
             // Check map tile is valid for travel
-            if (this.map[adjacentNodes[a].y][adjacentNodes[a].x] == 1) {
+            if (this.map[adjacentNodes[a].y][adjacentNodes[a].x] == 3) {
                 flag = true;
             }
 
@@ -73,6 +77,7 @@ PathFinder.prototype.findPath = function(object, target) {
         // Remove from open list
         openList.splice(currentIndex, 1);
 
+        // I can't remember what this is but its probably important
         if (currentNode == null) {
             return new Array();
         }
@@ -101,16 +106,40 @@ PathFinder.prototype.findAdjacentNodes = function(currentNode, destVectorX, dest
     adjacentNodes.push(new Node(currentNode.x, currentNode.y + 1, 10, currentNode, destVectorX, destVectorY));
     adjacentNodes.push(new Node(currentNode.x, currentNode.y - 1, 10, currentNode, destVectorX, destVectorY));
 
-    if (this.map[currentNode.y][currentNode.x + 1] != 1 && this.map[currentNode.y + 1][currentNode.x] != 1) {
+    // if (this.map[currentNode.y][currentNode.x - 1] != 3 && this.map[currentNode.y][currentNode.x + 1] != 3 && this.map[currentNode.y + 1][currentNode.x] != 3 && this.map[currentNode.y - 1][currentNode.x] != 3) {
+    //     adjacentNodes.push(new Node(currentNode.x - 1, currentNode.y + 1, 14, currentNode, destVectorX, destVectorY));
+    //     adjacentNodes.push(new Node(currentNode.x + 1, currentNode.y + 1, 14, currentNode, destVectorX, destVectorY));
+    //     adjacentNodes.push(new Node(currentNode.x - 1, currentNode.y - 1, 14, currentNode, destVectorX, destVectorY));
+    //     adjacentNodes.push(new Node(currentNode.x - 1, currentNode.y - 1, 14, currentNode, destVectorX, destVectorY));
+    // }
+
+    // if (this.map[currentNode.y][currentNode.x - 1] != 3 && this.map[currentNode.y + 1][currentNode.x] != 3) {
+    //     adjacentNodes.push(new Node(currentNode.x - 1, currentNode.y + 1, 14, currentNode, destVectorX, destVectorY));
+    // }
+    // if (this.map[currentNode.y][currentNode.x + 1] != 3 && this.map[currentNode.y - 1][currentNode.x] != 3) {
+    //     adjacentNodes.push(new Node(currentNode.x + 1, currentNode.y - 1, 14, currentNode, destVectorX, destVectorY));
+    // }
+
+
+    //  if (this.map[currentNode.y][currentNode.x - 1] != 3 && this.map[currentNode.y - 1][currentNode.x] != 3) {
+    //     adjacentNodes.push(new Node(currentNode.x - 1, currentNode.y - 1, 14, currentNode, destVectorX, destVectorY));
+    // }
+
+    //  if (this.map[currentNode.y][currentNode.x + 1] != 3 && this.map[currentNode.y + 1][currentNode.x] != 3) {
+    //     adjacentNodes.push(new Node(currentNode.x + 1, currentNode.y + 1, 14, currentNode, destVectorX, destVectorY));
+    // }   
+
+
+    if (this.map[currentNode.y][currentNode.x + 1] != 3 && this.map[currentNode.y + 1][currentNode.x] != 3) {
         adjacentNodes.push(new Node(currentNode.x + 1, currentNode.y + 1, 14, currentNode, destVectorX, destVectorY));
     }
-    if (this.map[currentNode.y][currentNode.x - 1] != 1 && this.map[currentNode.y - 1][currentNode.x] != 1) {
+    if (this.map[currentNode.y][currentNode.x - 1] != 3 && this.map[currentNode.y - 1][currentNode.x] != 3) {
         adjacentNodes.push(new Node(currentNode.x - 1, currentNode.y - 1, 14, currentNode, destVectorX, destVectorY));
     }
-    if (this.map[currentNode.y][currentNode.x - 1] != 1 && this.map[currentNode.y + 1][currentNode.x] != 1) {
+    if (this.map[currentNode.y][currentNode.x - 1] != 3 && this.map[currentNode.y + 1][currentNode.x] != 3) {
         adjacentNodes.push(new Node(currentNode.x - 1, currentNode.y + 1, 14, currentNode, destVectorX, destVectorY));
     }
-    if (this.map[currentNode.y][currentNode.x + 1] != 1 && this.map[currentNode.y - 1][currentNode.x] != 1) {
+    if (this.map[currentNode.y][currentNode.x + 1] != 3 && this.map[currentNode.y - 1][currentNode.x] != 3) {
         adjacentNodes.push(new Node(currentNode.x + 1, currentNode.y - 1, 14, currentNode, destVectorX, destVectorY));
     }
 

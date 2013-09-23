@@ -11,15 +11,17 @@ function Monster(x, y, image) {
 	this.width = 32;
 	this.height = 32;
 	this.alive = true;
-	this.findInterval = Math.floor((Math.random()*10)+1);
-
+	this.findInterval = Math.floor((Math.random()*20)+1);
+	this.currentAnimation = 4;
+	this.currentFrame = 0;
+	this.frameCounter = 0;
 }
 
-Monster.prototype.update = function(step, players, pathFinder) {
+Monster.prototype.update = function(step, players, pathFinder, animations) {
 
 	if (this.alive) {
 		// This function does not need to run every frame
-		if (this.findInterval == Math.floor((Math.random()*10)+1)) {
+		if (this.findInterval == Math.floor((Math.random()*20)+1)) {
 
 			var c = this.findClosestPlayer(players);
 			this.playerTarget = c;
@@ -28,12 +30,26 @@ Monster.prototype.update = function(step, players, pathFinder) {
 
 		this.faceCurrentNode();
 		this.walkForwards(step);
+
+		this.frameCounter++;
+		if (this.frameCounter > animations[this.currentAnimation].frames[this.currentFrame].length) {
+			this.frameCounter = 0;
+			this.currentFrame++;
+			if (this.currentFrame >= animations[this.currentAnimation].frames.length) {
+				if (animations[this.currentAnimation].looping) {
+					this.currentFrame = 0;
+				} else {
+					this.currentAnimation = 4;
+					this.currentFrame = 0;
+				}
+			}
+		}
 	}
 }
 
 Monster.prototype.faceCurrentNode = function() {
 	if (this.path.length != 0) {
-		this.angle = Math.atan2(((this.path[this.currentNode].y * 32) - this.y) + 16, ((this.path[this.currentNode].x * 32) - this.x) + 16);
+		this.angle = Math.atan2((this.path[this.currentNode].y * 32) - this.y, (this.path[this.currentNode].x * 32) - this.x);
 
 		this.angle = this.angle * (180/Math.PI); 
 		this.angle -= 90;
@@ -43,9 +59,10 @@ Monster.prototype.faceCurrentNode = function() {
 
 Monster.prototype.walkForwards = function(step) {
 	if (this.path.length != 0) { 
+		this.setAnimation(5);
 
-		this.x += (Math.cos(this.angle + 1.5) * step * this.speed);
-		this.y += (Math.sin(this.angle + 1.5) * step * this.speed);
+		this.x += (Math.cos(this.angle + 1.57079633) * step * this.speed);
+		this.y += (Math.sin(this.angle + 1.57079633) * step * this.speed);
 
 		if (this.x >= (this.path[this.currentNode].x * 32) - 11 && this.x <= (this.path[this.currentNode].x * 32) + 21 && this.y >= (this.path[this.currentNode].y * 32) - 11 && this.y <= (this.path[this.currentNode].y * 32) + 21) {
 			this.currentNode++;
@@ -76,12 +93,13 @@ Monster.prototype.findClosestPlayer = function(players) {
 	return c;
 }
 
-Monster.prototype.draw = function(context) {
+Monster.prototype.draw = function(context, spriteSheet, animations) {
 	if (this.alive) {
 		context.save();
 		context.translate(this.x, this.y);
+		context.translate(this.width / 2, this.height / 2);
 		context.rotate(this.angle); 	
-		context.drawImage(this.image, -16, -16, 32, 32);
+		context.drawImage(spriteSheet, animations[this.currentAnimation].frames[this.currentFrame].imgX, animations[this.currentAnimation].frames[this.currentFrame].imgY, animations[this.currentAnimation].frames[this.currentFrame].width, animations[this.currentAnimation].frames[this.currentFrame].height, -this.width / 2, -this.height / 2, 32, 32);	
 		context.restore();
 	}
 }
@@ -89,4 +107,12 @@ Monster.prototype.draw = function(context) {
 Monster.prototype.setPath = function(path) {
 	this.path = path;
 	this.currentNode = 0;
+}
+
+
+Monster.prototype.setAnimation = function(animation) {
+	if (animation != this.currentAnimation) {
+		this.currentAnimation = animation;
+		this.currentFrame = 0;
+	}
 }

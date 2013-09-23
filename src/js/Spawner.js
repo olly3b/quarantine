@@ -11,8 +11,10 @@ Spawner.prototype.update = function() {
 	this.counter++;
 	if (this.counter >= this.frequency) {
 		this.counter = 0;
-		this.amount--;
-		return true;
+		if (this.amount > 0) {
+			this.amount--;
+			return true;
+		}
 	}
 
 	return false;

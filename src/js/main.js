@@ -29,11 +29,31 @@ window.Game = {};
     var spawners = new Array();  
 
     var pathFinder = new PathFinder(map.dynamicMap);;
+    
+    var spriteSheet = new Image();
+    spriteSheet.src = 'img/spritesheet.png';
+    var animations = new Array();
+    animations.push(new Animation(true)); // Player standing // 0
+    animations[animations.length - 1].addFrame(0, 0, 32, 32, 1);
+    animations.push(new Animation(true)); // Player walking // 1
+    animations[animations.length - 1].addFrame(32, 0, 32, 32, 7);
+    animations[animations.length - 1].addFrame(64, 0, 32, 32, 7);
+    animations.push(new Animation(true)); // Player aiming // 2
+    animations[animations.length - 1].addFrame(96, 0, 32, 32, 1);
+    animations.push(new Animation(false)); // Player shooting // 3
+    animations[animations.length - 1].addFrame(128, 0, 32, 32, 10);    
+    animations[animations.length - 1].addFrame(96, 0, 32, 32, 20);
+    animations.push(new Animation(true)); // Monster standing // 4
+    animations[animations.length - 1].addFrame(0, 96, 32, 32, 1);
+    animations.push(new Animation(true)); // Monster walking  // 5
+    animations[animations.length - 1].addFrame(32, 96, 32, 32, 7);
+    animations[animations.length - 1].addFrame(64, 96, 32, 32, 7);
+    
 
 	spawners.push(new Spawner(1, 1));
-	spawners.push(new Spawner(19, 14));
-	spawners.push(new Spawner(19, 1));
-	spawners.push(new Spawner(1, 14));
+	spawners.push(new Spawner(1, 2));
+	spawners.push(new Spawner(1, 27));
+	spawners.push(new Spawner(1, 28));
 
     var debugOn = false;
 
@@ -48,9 +68,9 @@ window.Game = {};
     }
 
     Game.initialiseGame = function() {
-        players.push(new Player (160, 120, 'img/player.png'));
-        players.push(new Player (480, 120, 'img/player.png'));
-        players.push(new Player (480, 360, 'img/player.png'));
+        players.push(new Player (384, 424, 0));
+        players.push(new Player (384, 392, 1));
+        players.push(new Player (384, 360, 2));
 
         mainViewport.focus = players[0];
         players[0].focus = true;
@@ -72,7 +92,7 @@ window.Game = {};
         
     var updateAIPlayers = function() {
         for (var p = 0; p < players.length; p++) {
-            if (players[p].update(STEP, mainViewport, pathFinder, monsters)) {
+            if (players[p].update(STEP, mainViewport, pathFinder, monsters, p, animations)) {
                 bullets[bullets.length] = new Bullet(players[p], Math.cos(players[p].angle + 1.57079633), Math.sin(players[p].angle + 1.57079633));
             }
         }
@@ -81,7 +101,7 @@ window.Game = {};
     var updateMonsters = function() {
         if (monsters.length != 0) {
             for (var m = 0; m < monsters.length; m++) {
-                monsters[m].update(STEP, players, pathFinder);
+                monsters[m].update(STEP, players, pathFinder, animations);
                 if (monsters[m].alive == false) {
                     monsters.splice(m, 1);
                 }
@@ -103,7 +123,7 @@ window.Game = {};
     var updateSpawners = function() {
         for (var s = 0; s < spawners.length; s++) {
             if (spawners[s].update()) {
-                monsters.push(new Monster(spawners[s].x * 32 + 16, spawners[s].y * 32 + 16, 'img/monster.png'))
+                monsters.push(new Monster(spawners[s].x * 32, spawners[s].y * 32, 'img/monster.png'))
             }
         }       
     }
@@ -129,13 +149,13 @@ window.Game = {};
 
     var drawPlayers = function() {
         for (var p = 0; p < players.length; p++) {
-            players[p].draw(context);
+            players[p].draw(context, spriteSheet, animations);
         }     
     }
 
     var drawMonsters = function() {
         for (var i = 0; i < monsters.length; i++) {
-            monsters[i].draw(context);
+            monsters[i].draw(context, spriteSheet, animations);
         }
     }
 
@@ -168,6 +188,7 @@ window.Game = {};
     }
 
     var drawDebug = function() {
+        drawContext.fillStyle = '#000000';
 	  	//drawContext.fillText('x: ' + Math.floor(mainViewport.x) + ' y: ' + Math.floor(mainViewport.y), 10, 10);
 	   	//drawContext.fillText('x: ' + Math.floor(playerViewPortOne.x) + ' y: ' + Math.floor(playerViewPortOne.y), 645, 10);      	
 	  	//drawContext.fillText('x: ' + Math.floor(playerViewPortTwo.x) + ' y: ' + Math.floor(playerViewPortTwo.y), 645, 175);
@@ -182,6 +203,7 @@ window.Game = {};
 	  	drawContext.fillText('tiles: ' + map.tilesX + ' x ' + map.tilesY, 10, 110)
 
 	  	// Draw path
+        drawContext.fillStyle = '#00FF00';
 	  	for (var m = 0; m < monsters.length; m++) {
 	  		if (monsters[m].path != null) {
 	  			for (var i = 0; i < monsters[m].path.length; i++) {      			
@@ -189,6 +211,15 @@ window.Game = {};
 	  			}
 	  		}	
 	    }
+
+        drawContext.fillStyle = '#0000FF';
+        for (var p = 0; p < players.length; p++) {
+            if (players[p].path != null) {
+                for (var i = 0; i < players[p].path.length; i++) {                 
+                    drawContext.fillText(players[p].path[i].f, ((players[p].path[i].x * 32) - mainViewport.x) + 16, ((players[p].path[i].y * 32) - mainViewport.y) + 16);
+                }
+            }   
+        }
     }
 
     // Game Loop
@@ -227,7 +258,9 @@ window.Game = {};
 
     Game.toggleFocus = function(){
     	if (controls.mouseX > playerViewPortOne.posX + 5 && controls.mouseY > playerViewPortOne.posY + 5 && controls.mouseX < playerViewPortOne.posX + 5 + playerViewPortOne.width && controls.mouseY < playerViewPortOne.posY + 5 + playerViewPortOne.height) {
-    		var temp = mainViewport.focus;
+    		mainViewport.focus.currentViewPort = 1;
+            playerViewPortOne.focus.currentViewPort = 0;
+            var temp = mainViewport.focus;
     		mainViewport.focus.focus = false;
     		mainViewport.focus = playerViewPortOne.focus;
     		playerViewPortOne.focus.focus = true;
@@ -237,6 +270,8 @@ window.Game = {};
     	}
 
     	if (controls.mouseX > playerViewPortTwo.posX + 5 && controls.mouseY > playerViewPortTwo.posY + 5 && controls.mouseX < playerViewPortTwo.posX + 5 + playerViewPortTwo.width && controls.mouseY < playerViewPortTwo.posY + 5 + playerViewPortTwo.height) {
+            mainViewport.focus.currentViewPort = 2;
+            playerViewPortTwo.focus.currentViewPort = 0;
     		var temp = mainViewport.focus;
     		mainViewport.focus.focus = false;
     		mainViewport.focus = playerViewPortTwo.focus;

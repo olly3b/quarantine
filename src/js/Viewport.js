@@ -27,8 +27,8 @@ Viewport.prototype.update = function(map) {
 		this.x = 0;
 	if (this.y < 0)
 		this.y = 0;
-	if (this.x > map.sizeX - this.width)
-		this.x = map.sizeX - this.width;
-	if (this.y > map.sizeY - this.height)
-		this.y = map.sizeY - this.height;
+	if (this.x > map.width - this.width)
+		this.x = map.width - this.width;
+	if (this.y > map.height - this.height)
+		this.y = map.height - this.height;
 }

@@ -1,29 +1,32 @@
-function Player(x, y, image) {
+function Player(x, y, player) {
 	this.x = x;
 	this.y = y;
-	this.image = new Image();
-	this.image.src = image;
-	this.speed = 200;
+	this.player = player;
+	this.currentViewPort = player;
+	this.speed = 100;
 	this.angle = 0;	
 	this.path = null;
 	this.currentNode = 0;
 	this.follow = false;
 	this.width = 32;
 	this.height = 32;
-	this.findInterval = Math.floor((Math.random()*10)+1);
+	this.findInterval = Math.floor((Math.random()*20)+1);
 	this.focus = false;
 	this.fireDelay = false;
 	this.fireCounter = 0;
-	this.fireRate = 20;
+	this.fireRate = 30;
 	this.sight = 400;
+	this.currentAnimation = 0;
+	this.currentFrame = 0;
+	this.frameCounter = 0;
 }
 
-Player.prototype.draw = function(context) {
+Player.prototype.draw = function(context, spriteSheet, animations) {
 	context.save();
 	context.translate(this.x, this.y);
 	context.translate(this.width / 2, this.height / 2);
 	context.rotate(this.angle); 	
-	context.drawImage(this.image, -this.width / 2, -this.height / 2, 32, 32);	
+	context.drawImage(spriteSheet, animations[this.currentAnimation].frames[this.currentFrame].imgX, (animations[this.currentAnimation].frames[this.currentFrame].imgY + 32) * this.player, animations[this.currentAnimation].frames[this.currentFrame].width, animations[this.currentAnimation].frames[this.currentFrame].height, -this.width / 2, -this.height / 2, 32, 32);	
 	context.restore();
 }
 
@@ -42,14 +45,25 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 	var oldX = this.x;
 	var oldY = this.y;
 
+	if (!controls.left && !controls.right && !controls.up && !controls.down && !controls.space && !this.fireDelay) {
+		this.setAnimation(0);
+	}
+
 	var b = false;
 	if (controls.space) { b = this.shoot(); }
 
-	if(controls.left)
-		this.x -= this.speed * step;
-	
-	if(controls.right)
-		this.x += this.speed * step;
+	if (!this.fireDelay) {
+
+		if(controls.left) {
+			this.x -= this.speed * step;
+			this.setAnimation(1);
+		}
+		
+		if(controls.right) {
+			this.x += this.speed * step;
+			this.setAnimation(1);
+		}
+	}
 	
 	for(var ay = 0; ay < map.dynamicMap.length ; ay++) {
 		for(var ax = 0; ax < map.dynamicMap[ay].length; ax++) {
@@ -57,9 +71,9 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 	 		var tile = map.dynamicMap[ay][ax];
 
 	 		switch(tile) {		 			
-	 			case 1:	
-	 				if (this.x + 32 > ax * 32 && this.x < (ax * 32) + 32) {
-	 					if (this.y + 32 > ay * 32 && this.y < (ay * 32) + 32) {		 									 								 								 								 				
+	 			case 3:	
+	 				if (this.x + 30 > ax * 32 && this.x < (ax * 32) + 30) {
+	 					if (this.y + 30 > ay * 32 && this.y < (ay * 32) + 30) {		 									 								 								 								 				
 	 						this.x = oldX;
 	 					}		 								 					
 	 				}	 			
@@ -68,10 +82,17 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 		}
 	}
 
-	if(controls.up)
-		this.y -= this.speed * step;
-	if(controls.down)
-		this.y += this.speed * step;  
+	if (!this.fireDelay) {
+
+		if(controls.up) {
+			this.y -= this.speed * step;
+			this.setAnimation(1);
+		}
+		if(controls.down) {		
+			this.y += this.speed * step;  
+			this.setAnimation(1);		
+		}
+	}
 
 	for(var ay = 0; ay < map.dynamicMap.length ; ay++) {
 		for(var ax = 0; ax < map.dynamicMap[ay].length; ax++) {
@@ -79,9 +100,9 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 	 		var tile = map.dynamicMap[ay][ax];
 
 	 		switch(tile) {		 			
-	 			case 1:	
-	 				if (this.x  + 32 > ax * 32 && this.x < (ax * 32) + 32) {
-	 					if (this.y + 32 > ay * 32 && this.y < (ay * 32) + 32) {		 				 									 								 								 								 				
+	 			case 3:	
+	 				if (this.x  + 30 > ax * 32 && this.x < (ax * 32) + 30) {
+	 					if (this.y + 30 > ay * 32 && this.y < (ay * 32) + 30) {		 				 									 								 								 								 				
 	 						this.y = oldY;
 	 					}		 								 					
 	 				}	 			
@@ -93,12 +114,21 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 	return b;
 }
 
-Player.prototype.update = function(step, mainViewPort, pathFinder, monsters) {
-	if (!this.focus) {
+Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, player, animations) {
+	if (!this.focus) {		
 		if (this.follow) {
-			this.setPath(pathFinder.findPath(this, mainViewPort.focus));
+			//if (this.findInterval == Math.floor((Math.random()*20)+1)) {
+				this.setPath(pathFinder.findPath(this, mainViewPort.focus));				
+			//}
+			for (var p = 0; p < this.currentViewPort; p++) {
+
+				this.path.pop(this.path.length - 1);
+			}
+
 			this.faceCurrentNode();
 			this.walkForwards(step);
+		} else {
+			this.setAnimation(0);
 		}	
 
 		if (this.AIShoot(monsters)) {
@@ -111,12 +141,29 @@ Player.prototype.update = function(step, mainViewPort, pathFinder, monsters) {
 		this.fireDelay = false;
 	}
 
+	this.frameCounter++;
+	if (this.frameCounter > animations[this.currentAnimation].frames[this.currentFrame].length) {
+		this.frameCounter = 0;
+		this.currentFrame++;
+		if (this.currentFrame >= animations[this.currentAnimation].frames.length) {
+			if (animations[this.currentAnimation].looping) {
+				this.currentFrame = 0;
+			} else {
+				this.currentAnimation = 0;
+				this.currentFrame = 0;
+			}
+		}
+	}
 }
 
 
 Player.prototype.faceCurrentNode = function() {
 	if (this.path.length != 0) {
-		this.angle = Math.atan2(((this.path[this.currentNode].y * 32) - this.y) + 16, ((this.path[this.currentNode].x * 32) - this.x) + 16);
+		//this.angle = Math.atan2((this.path[this.currentNode].y * 32) - (this.y + 16), (this.path[this.currentNode].x * 32) - (this.x + 16));
+		//this.angle = Math.atan2(((this.path[this.currentNode].y * 32) - this.y) + 16, ((this.path[this.currentNode].x * 32) - this.x) + 16);
+		//this.angle = Math.atan2(((this.path[this.currentNode].y * 32) + 16) - this.y, ((this.path[this.currentNode].x * 32) + 16) - this.x);
+		this.angle = Math.atan2((this.path[this.currentNode].y * 32) - this.y, (this.path[this.currentNode].x * 32) - this.x);
+		//this.angle = Math.atan2(((this.path[this.currentNode].y * 32) - 16) - this.y, ((this.path[this.currentNode].x * 32) - 16) - this.x + 16);
 
 		this.angle = this.angle * (180/Math.PI); 
 		this.angle -= 90;
@@ -126,16 +173,18 @@ Player.prototype.faceCurrentNode = function() {
 
 Player.prototype.walkForwards = function(step) {
 	if (this.path.length != 0) { 
-
-		this.x += (Math.cos(this.angle + 1.5) * step * this.speed);
-		this.y += (Math.sin(this.angle + 1.5) * step * this.speed);
-
-		if (this.x >= (this.path[this.currentNode].x * 32) - 11 && this.x <= (this.path[this.currentNode].x * 32) + 21 && this.y >= (this.path[this.currentNode].y * 32) - 11 && this.y <= (this.path[this.currentNode].y * 32) + 21) {
+		this.setAnimation(1);		
+		this.x += (Math.cos(this.angle + 1.57079633) * step * this.speed);
+		this.y += (Math.sin(this.angle + 1.57079633) * step * this.speed);
+		//if (this.x + 16 >= (this.path[this.currentNode].x * 32) + 15 && this.x + 16 <= (this.path[this.currentNode].x * 32) + 17 && this.y + 16 >= (this.path[this.currentNode].y * 32) + 15 && this.y + 16 <= (this.path[this.currentNode].y * 32) + 17) {
+		if (this.x >= ((this.path[this.currentNode].x * 32) + 16) && this.x <= ((this.path[this.currentNode].x * 32) + 16) && this.y >= ((this.path[this.currentNode].y * 32) + 16) && this.y <= ((this.path[this.currentNode].y * 32) + 16)) {
 			this.currentNode++;
 			if (this.currentNode > this.path.length - 1) {
 				this.path = [];
 			}
 		} 
+	} else {
+		this.setAnimation(0);
 	}
 }
 
@@ -154,10 +203,11 @@ Player.prototype.shoot = function() {
 	if (!this.fireDelay) {
 		this.fireDelay = true;
 		this.fireCounter = 0;
+		this.setAnimation(3);
 		return true;
 	}
 
-	
+	this.setAnimation(2);
 	return false
 }
 
@@ -189,13 +239,22 @@ Player.prototype.findClosestMonster = function(monsters) {
 
 
 Player.prototype.faceMonster = function(x, y) {
+	this.setAnimation(2);
 	//this.angle = Math.atan2((y - this.y) - this.height / 2, (x - this.x) - this.width / 2);
-	this.angle = Math.atan2(y - (this.y + this.height / 2), x - (this.x + this.width / 2));
+	//this.angle = Math.atan2(y - (this.y + this.height / 2), x - (this.x + this.width / 2));
+	this.angle = Math.atan2(y - this.y, x - this.x);
 	//this.angle = Math.atan2((y - this.y), (x - this.x));
 
 	this.angle = this.angle * (180/Math.PI); 
 	this.angle -= 90;
 	this.angle = this.angle * (Math.PI/180);	
+}
+
+Player.prototype.setAnimation = function(animation) {
+	if (animation != this.currentAnimation) {
+		this.currentAnimation = animation;
+		this.currentFrame = 0;
+	}
 }
 
 

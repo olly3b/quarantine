@@ -3,9 +3,9 @@ function Bullet(player, vx, vy) {
 	this.y = player.y + player.height / 2;
 	this.vx = vx;
 	this.vy = vy;
-	this.speed = 500;
+	this.speed = 600;
 	this.alive = true;
-	this.size = 2;
+	this.size = 1;
 	this.damage = 1;
 }
 
@@ -17,8 +17,8 @@ Bullet.prototype.update = function(monsters, step, map) {
 		this.y += this.vy * this.speed * step;
 
 		for (var m = 0; m < monsters.length; m++) {
-			if (this.x > monsters[m].x - monsters[m].width / 2 && this.x < monsters[m].x + monsters[m].width / 2) {
-				if (this.y > monsters[m].y - monsters[m].height / 2 && this.y < monsters[m].y + monsters[m].height / 2) {
+			if (this.x > monsters[m].x && this.x < monsters[m].x + monsters[m].width) {
+				if (this.y > monsters[m].y && this.y < monsters[m].y + monsters[m].height) {
 					monsters[m].alive = false;
 					this.alive = false;
 				}
@@ -32,7 +32,7 @@ Bullet.prototype.update = function(monsters, step, map) {
 	 		var tile = map.dynamicMap[ay][ax];
 
 	 		switch(tile) {		 			
-	 			case 1:	
+	 			case 3:	
 	 				if (this.x > ax * 32 && this.x < (ax * 32) + 32) {
 	 					if (this.y > ay * 32 && this.y < (ay * 32) + 32) { // + this.size /2) {		 									 								 								 								 				
 	 						this.alive = false;
