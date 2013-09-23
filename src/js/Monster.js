@@ -15,9 +15,10 @@ function Monster(x, y, image) {
 	this.currentAnimation = 4;
 	this.currentFrame = 0;
 	this.frameCounter = 0;
+
 }
 
-Monster.prototype.update = function(step, players, pathFinder, animations) {
+Monster.prototype.update = function(step, players, pathFinder, animations, sounds) {
 
 	if (this.alive) {
 		// This function does not need to run every frame
@@ -44,6 +45,10 @@ Monster.prototype.update = function(step, players, pathFinder, animations) {
 				}
 			}
 		}
+	}
+
+	if (Math.floor((Math.random() * 600) + 1) == 1) {
+		sounds[Math.floor((Math.random() * sounds.length) + 1)].play();
 	}
 }
 

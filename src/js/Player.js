@@ -14,8 +14,9 @@ function Player(x, y, player) {
 	this.focus = false;
 	this.fireDelay = false;
 	this.fireCounter = 0;
-	this.fireRate = 30;
-	this.sight = 400;
+	this.fireRate = 50;
+	this.checkAngle = 0;
+	this.sight = 240;
 	this.currentAnimation = 0;
 	this.currentFrame = 0;
 	this.frameCounter = 0;
@@ -114,7 +115,7 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 	return b;
 }
 
-Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, player, animations) {
+Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, player, animations, map) {
 	if (!this.focus) {		
 		if (this.follow) {
 			//if (this.findInterval == Math.floor((Math.random()*20)+1)) {
@@ -131,7 +132,7 @@ Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, pla
 			this.setAnimation(0);
 		}	
 
-		if (this.AIShoot(monsters)) {
+		if (this.AIShoot(monsters, map)) {
 			return true;
 		}
 	}
@@ -159,12 +160,7 @@ Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, pla
 
 Player.prototype.faceCurrentNode = function() {
 	if (this.path.length != 0) {
-		//this.angle = Math.atan2((this.path[this.currentNode].y * 32) - (this.y + 16), (this.path[this.currentNode].x * 32) - (this.x + 16));
-		//this.angle = Math.atan2(((this.path[this.currentNode].y * 32) - this.y) + 16, ((this.path[this.currentNode].x * 32) - this.x) + 16);
-		//this.angle = Math.atan2(((this.path[this.currentNode].y * 32) + 16) - this.y, ((this.path[this.currentNode].x * 32) + 16) - this.x);
 		this.angle = Math.atan2((this.path[this.currentNode].y * 32) - this.y, (this.path[this.currentNode].x * 32) - this.x);
-		//this.angle = Math.atan2(((this.path[this.currentNode].y * 32) - 16) - this.y, ((this.path[this.currentNode].x * 32) - 16) - this.x + 16);
-
 		this.angle = this.angle * (180/Math.PI); 
 		this.angle -= 90;
 		this.angle = this.angle * (Math.PI/180);	
@@ -175,8 +171,7 @@ Player.prototype.walkForwards = function(step) {
 	if (this.path.length != 0) { 
 		this.setAnimation(1);		
 		this.x += (Math.cos(this.angle + 1.57079633) * step * this.speed);
-		this.y += (Math.sin(this.angle + 1.57079633) * step * this.speed);
-		//if (this.x + 16 >= (this.path[this.currentNode].x * 32) + 15 && this.x + 16 <= (this.path[this.currentNode].x * 32) + 17 && this.y + 16 >= (this.path[this.currentNode].y * 32) + 15 && this.y + 16 <= (this.path[this.currentNode].y * 32) + 17) {
+		this.y += (Math.sin(this.angle + 1.57079633) * step * this.speed);		
 		if (this.x >= ((this.path[this.currentNode].x * 32) + 16) && this.x <= ((this.path[this.currentNode].x * 32) + 16) && this.y >= ((this.path[this.currentNode].y * 32) + 16) && this.y <= ((this.path[this.currentNode].y * 32) + 16)) {
 			this.currentNode++;
 			if (this.currentNode > this.path.length - 1) {
@@ -188,12 +183,60 @@ Player.prototype.walkForwards = function(step) {
 	}
 }
 
-Player.prototype.AIShoot = function(monsters) {
+Player.prototype.AIShoot = function(monsters, map) {
 	var m = this.findClosestMonster(monsters);
-	if (m != null) {
-		this.faceMonster(monsters[m].x, monsters[m].y);
+	if (m != null) {		
+		//if (this.canSeeMonster(monsters, map)) {
+			this.faceMonster(monsters[m].x, monsters[m].y);
+			return this.shoot();
+		//}
+	}
 
-		return this.shoot();
+	return false;
+}
+
+Player.prototype.canSeeMonster = function(monsters, map) {
+	
+	for (var a = 0; a < 360; a++) {
+		//var dirX = Math.cos(a + this.angle + 1.57079633); 
+		//var dirY = Math.sin(a + this.angle + 1.57079633);
+		var dirX = Math.cos(a); 
+		var dirY = Math.sin(a);
+
+		var posX = this.x;
+		var posY = this.y;
+
+		var see = false;
+
+		for (var s = 0; s < this.sight; s++) {
+			posX += dirX;
+			posY += dirY;
+
+			for (var m = 0; m < monsters.length; m++) {
+				if (posX > monsters[m].x && posX < monsters[m].x + monsters[m].width) {
+					if (posY > monsters[m].y && posY < monsters[m].y + monsters[m].height) {
+						return true;
+					}
+				}
+			}
+
+			for(var ay = 0; ay < map.dynamicMap.length ; ay++) {
+				for(var ax = 0; ax < map.dynamicMap[ay].length; ax++) {
+				 		
+			 		var tile = map.dynamicMap[ay][ax];
+
+			 		switch(tile) {		 			
+			 			case 3:	
+			 				if (posX > ax * 32 && posX < (ax * 32) + 32) {
+			 					if (posY > ay * 32 && posY < (ay * 32) + 32) { 									 								 								 								 				
+			 						return false;
+			 					}		 								 					
+			 				}	 			
+				 			break;
+				 	}
+				}
+			}
+		}
 	}
 
 	return false;
@@ -240,11 +283,7 @@ Player.prototype.findClosestMonster = function(monsters) {
 
 Player.prototype.faceMonster = function(x, y) {
 	this.setAnimation(2);
-	//this.angle = Math.atan2((y - this.y) - this.height / 2, (x - this.x) - this.width / 2);
-	//this.angle = Math.atan2(y - (this.y + this.height / 2), x - (this.x + this.width / 2));
 	this.angle = Math.atan2(y - this.y, x - this.x);
-	//this.angle = Math.atan2((y - this.y), (x - this.x));
-
 	this.angle = this.angle * (180/Math.PI); 
 	this.angle -= 90;
 	this.angle = this.angle * (Math.PI/180);	

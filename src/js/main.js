@@ -48,7 +48,18 @@ window.Game = {};
     animations.push(new Animation(true)); // Monster walking  // 5
     animations[animations.length - 1].addFrame(32, 96, 32, 32, 7);
     animations[animations.length - 1].addFrame(64, 96, 32, 32, 7);
-    
+
+    var gunSound = new Array();
+    gunSound.push(new Audio('sound/pistol.mp3'));
+    gunSound.push(new Audio('sound/pistol.mp3'));
+    gunSound.push(new Audio('sound/pistol.mp3'));
+
+    var zombieSounds = new Array();
+    zombieSounds.push(new Audio('sound/zombie1.mp3'));
+    zombieSounds.push(new Audio('sound/zombie2.mp3'));
+    zombieSounds.push(new Audio('sound/zombie3.mp3'));
+    zombieSounds.push(new Audio('sound/zombie4.mp3'));
+    zombieSounds.push(new Audio('sound/zombie5.mp3'));
 
 	spawners.push(new Spawner(1, 1));
 	spawners.push(new Spawner(1, 2));
@@ -87,13 +98,15 @@ window.Game = {};
     var updateControlledPlayer = function() {
         if (mainViewport.focus.controlUpdate(STEP, mainViewport, map)) {
             bullets[bullets.length] = new Bullet(mainViewport.focus, Math.cos(mainViewport.focus.angle + 1.57079633), Math.sin(mainViewport.focus.angle + 1.57079633));
+            gunSound[0].play();
         }
     }
         
     var updateAIPlayers = function() {
         for (var p = 0; p < players.length; p++) {
-            if (players[p].update(STEP, mainViewport, pathFinder, monsters, p, animations)) {
+            if (players[p].update(STEP, mainViewport, pathFinder, monsters, p, animations, map)) {
                 bullets[bullets.length] = new Bullet(players[p], Math.cos(players[p].angle + 1.57079633), Math.sin(players[p].angle + 1.57079633));
+                gunSound[p].play();
             }
         }
     }
@@ -101,7 +114,7 @@ window.Game = {};
     var updateMonsters = function() {
         if (monsters.length != 0) {
             for (var m = 0; m < monsters.length; m++) {
-                monsters[m].update(STEP, players, pathFinder, animations);
+                monsters[m].update(STEP, players, pathFinder, animations, zombieSounds);
                 if (monsters[m].alive == false) {
                     monsters.splice(m, 1);
                 }

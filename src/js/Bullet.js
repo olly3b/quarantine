@@ -11,21 +11,27 @@ function Bullet(player, vx, vy) {
 
 Bullet.prototype.update = function(monsters, step, map) {
 
+	this.checkBoundaries(map);
+
 	if (this.alive) {
+		this.move(step);
+		this.checkCollisionWithMonster(monsters);
+		this.checkCollisionWithMap(map);		
+	}
+}
 
-		this.x += this.vx * this.speed * step;
-		this.y += this.vy * this.speed * step;
-
-		for (var m = 0; m < monsters.length; m++) {
-			if (this.x > monsters[m].x && this.x < monsters[m].x + monsters[m].width) {
-				if (this.y > monsters[m].y && this.y < monsters[m].y + monsters[m].height) {
-					monsters[m].alive = false;
-					this.alive = false;
-				}
+Bullet.prototype.checkCollisionWithMonster = function(monsters) {
+	for (var m = 0; m < monsters.length; m++) {
+		if (this.x > monsters[m].x && this.x < monsters[m].x + monsters[m].width) {
+			if (this.y > monsters[m].y && this.y < monsters[m].y + monsters[m].height) {
+				monsters[m].alive = false;
+				this.killBullet();
 			}
 		}
+	}
+}
 
-
+Bullet.prototype.checkCollisionWithMap = function(map) {
 	for(var ay = 0; ay < map.dynamicMap.length ; ay++) {
 		for(var ax = 0; ax < map.dynamicMap[ay].length; ax++) {
 		 		
@@ -34,7 +40,7 @@ Bullet.prototype.update = function(monsters, step, map) {
 	 		switch(tile) {		 			
 	 			case 3:	
 	 				if (this.x > ax * 32 && this.x < (ax * 32) + 32) {
-	 					if (this.y > ay * 32 && this.y < (ay * 32) + 32) { // + this.size /2) {		 									 								 								 								 				
+	 					if (this.y > ay * 32 && this.y < (ay * 32) + 32) {
 	 						this.alive = false;
 	 					}		 								 					
 	 				}	 			
@@ -42,16 +48,26 @@ Bullet.prototype.update = function(monsters, step, map) {
 		 	}
 		}
 	}
-	}
+}
+
+Bullet.prototype.move = function(step) {
+	this.x += this.vx * this.speed * step;
+	this.y += this.vy * this.speed * step;
 }
 
 Bullet.prototype.draw = function(context, map) {
 	if (this.alive) {
 		context.fillStyle = '#000000';
     	context.fillRect(this.x, this.y, this.size, this.size);
-	}
+	}	
+}
 
+Bullet.prototype.checkBoundaries = function(map) {
 	if (this.x < 0 || this.y < 0 || this.x > map.sizeX || this.y > map.sizeY) {
-		this.alive = false;
+		this.killBullet();
 	}
+}
+
+Bullet.prototype.killBullet = function() {
+	this.alive = false;
 }
