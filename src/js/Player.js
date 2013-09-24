@@ -76,6 +76,8 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 	 		var tile = map.dynamicMap[ay][ax];
 
 	 		switch(tile) {		 			
+	 			case 1:
+	 			case 2:
 	 			case 3:	
 	 				if (this.x + 30 > ax * 32 && this.x < (ax * 32) + 30) {
 	 					if (this.y + 30 > ay * 32 && this.y < (ay * 32) + 30) {		 									 								 								 								 				
@@ -104,7 +106,9 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 		 		
 	 		var tile = map.dynamicMap[ay][ax];
 
-	 		switch(tile) {		 			
+	 		switch(tile) {	
+	 			case 1:
+	 			case 2:	 			
 	 			case 3:	
 	 				if (this.x  + 30 > ax * 32 && this.x < (ax * 32) + 30) {
 	 					if (this.y + 30 > ay * 32 && this.y < (ay * 32) + 30) {		 				 									 								 								 								 				

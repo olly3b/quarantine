@@ -19,9 +19,9 @@ window.Game = {};
 
     var map = new Map(1280, 960, 'img/map.png');
     
-    var mainViewport = new Viewport(0, 0, 640, 480);
-    var playerViewPortOne = new Viewport (645, 0, 200, 200);
-    var playerViewPortTwo = new Viewport (645, 240, 200, 200);
+    var mainViewport = new Viewport(5, 5, 640, 480);
+    var playerViewPortOne = new Viewport (650, 5, 200, 200);
+    var playerViewPortTwo = new Viewport (650, 245, 200, 200);
 
     var players = new Array();
     var monsters = new Array();
@@ -29,12 +29,10 @@ window.Game = {};
     var spawners = new Array();  
 
     Game.buttons = new Array();
-    Game.buttons.push(new Button(647, 205, 95, 20, 'img/follow.png')); // Follow 1
-    Game.buttons.push(new Button(647, 445, 95, 20, 'img/follow.png')); // Follow 2
-    Game.buttons.push(new Button(747, 205, 95, 20, 'img/ai.png')); // AI 1
-    Game.buttons.push(new Button(747, 445, 95, 20, 'img/follow.png')); // AI 2
-    //drawContext.fillRect(645, 205, 50, 20);
-    //drawContext.fillRect(645, 445, 50, 20);
+    Game.buttons.push(new Button(652, 210, 95, 20, 'img/follow.png')); // Follow 1
+    Game.buttons.push(new Button(652, 450, 95, 20, 'img/follow.png')); // Follow 2
+    Game.buttons.push(new Button(752, 210, 95, 20, 'img/ai.png')); // AI 1
+    Game.buttons.push(new Button(752, 450, 95, 20, 'img/ai.png')); // AI 2
 
     var pathFinder = new PathFinder(map.dynamicMap);;
     
@@ -88,9 +86,9 @@ window.Game = {};
     }
 
     Game.initialiseGame = function() {
-        players.push(new Player (384, 424, 0));
-        players.push(new Player (384, 392, 1));
-        players.push(new Player (384, 360, 2));
+        players.push(new Player (416, 616, 0));
+        players.push(new Player (416, 584, 1));
+        players.push(new Player (416, 552, 2));
 
         mainViewport.focus = players[0];
         players[0].focus = true;
@@ -223,30 +221,30 @@ window.Game = {};
 
         drawContext.strokeStyle = '#000000';
         // Main focus equipped
-        drawContext.strokeRect(5, 485, 64, 64);
+        drawContext.strokeRect(10, 490, 64, 64);
 
         // Main focus invenory
-        drawContext.strokeRect(74, 485, 32, 32);
-        drawContext.strokeRect(74, 517, 32, 32);
-        drawContext.strokeRect(106, 485, 32, 32);
-        drawContext.strokeRect(106, 517, 32, 32);
-        drawContext.strokeRect(138, 485, 32, 32);
-        drawContext.strokeRect(138, 517, 32, 32);
+        drawContext.strokeRect(79, 490, 32, 32);
+        drawContext.strokeRect(79, 522, 32, 32);
+        drawContext.strokeRect(111, 490, 32, 32);
+        drawContext.strokeRect(111, 522, 32, 32);
+        drawContext.strokeRect(143, 490, 32, 32);
+        drawContext.strokeRect(143, 522, 32, 32);
 
         // Player one viewport equipped
-        drawContext.strokeRect(850, 136, 64, 64);
+        drawContext.strokeRect(855, 141, 64, 64);
 
         // Player two viewport equipped
-        drawContext.strokeRect(850, 374, 64, 64);
+        drawContext.strokeRect(855, 379, 64, 64);
 
         drawContext.fillStyle = '#000000';
         // Main viewport equipped item
         if (mainViewport.focus.equipped != null) {
             if (mainViewport.focus.equipped.itemType = 'weapon') {
                 if (mainViewport.focus.equipped.itemName == 'pistol') {
-                    drawContext.drawImage(spriteSheet, 0, 128, 32, 32, 5, 486, 64, 64);
-                    drawContext.fillText(mainViewport.focus.equipped.ammo, 50, 545);
+                    drawContext.drawImage(spriteSheet, 0, 128, 32, 32, 10, 491, 64, 64);
                 }
+                drawContext.fillText(mainViewport.focus.equipped.ammo, 55, 550);
             }
         }
 
@@ -255,8 +253,9 @@ window.Game = {};
             if (mainViewport.focus.inventory[i] != null) {
                 if (mainViewport.focus.inventory[i].itemType = 'ammo') {
                     if (mainViewport.focus.inventory[i].itemName == 'pistol') {
-                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 74 + (i * 32), 485, 32, 32);
+                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 79 + (i * 32), 490, 32, 32);
                     }
+                    drawContext.fillText(mainViewport.focus.inventory[i].ammo, 98 + (i * 32), 520);
                 }
             }
         }
@@ -264,8 +263,9 @@ window.Game = {};
             if (mainViewport.focus.inventory[i] != null) {
                 if (mainViewport.focus.inventory[i].itemType = 'ammo') {
                     if (mainViewport.focus.inventory[i].itemName == 'pistol') {
-                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 74 + (i * 32), 517, 32, 32);
+                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 79 + (i * 32), 522, 32, 32);
                     }
+                     drawContext.fillText(mainViewport.focus.inventory[i].ammo, 98 + (i * 32), 552);
                 }
             }
         }
@@ -274,9 +274,9 @@ window.Game = {};
         if (playerViewPortOne.focus.equipped != null) {
             if (playerViewPortOne.focus.equipped.itemType = 'weapon') {
                 if (playerViewPortOne.focus.equipped.itemName == 'pistol') {
-                    drawContext.drawImage(spriteSheet, 0, 128, 32, 32, 850, 136, 64, 64);
-                    drawContext.fillText(playerViewPortOne.focus.equipped.ammo, 895, 196);
+                    drawContext.drawImage(spriteSheet, 0, 128, 32, 32, 855, 141, 64, 64);                    
                 }
+                drawContext.fillText(playerViewPortOne.focus.equipped.ammo, 900, 201);
             }
         }
 
@@ -284,9 +284,9 @@ window.Game = {};
         if (playerViewPortTwo.focus.equipped != null) {
             if (playerViewPortTwo.focus.equipped.itemType = 'weapon') {
                 if (playerViewPortTwo.focus.equipped.itemName == 'pistol') {
-                    drawContext.drawImage(spriteSheet, 0, 128, 32, 32, 850, 374, 64, 64);
-                    drawContext.fillText(playerViewPortTwo.focus.equipped.ammo, 895, 434);
+                    drawContext.drawImage(spriteSheet, 0, 128, 32, 32, 855, 379, 64, 64);
                 }
+                drawContext.fillText(playerViewPortTwo.focus.equipped.ammo, 900, 439);
             }
         }
     }
@@ -323,6 +323,23 @@ window.Game = {};
                     drawContext.fillText(players[p].path[i].f, ((players[p].path[i].x * 32) - mainViewport.x) + 16, ((players[p].path[i].y * 32) - mainViewport.y) + 16);
                 }
             }   
+        }
+
+        for(var y = 0; y < map.dynamicMap.length ; y++) {
+            for(var x = 0; x < map.dynamicMap[y].length; x++) {
+            
+                var tile = map.dynamicMap[y][x];
+                switch (tile) {
+                    case 2:
+                        drawContext.strokeStyle = '#00FF00';
+                        drawContext.strokeRect((x * 32) - mainViewport.x + mainViewport.posX, (y * 32) - mainViewport.y + mainViewport.posY, 32, 32);
+                    break;
+                    case 3:
+                        drawContext.strokeStyle = '#FF0000';
+                        drawContext.strokeRect((x * 32) - mainViewport.x + mainViewport.posX, (y * 32) - mainViewport.y + mainViewport.posY, 32, 32);
+                    break;
+                }                
+            }
         }
     }
 
@@ -361,7 +378,7 @@ window.Game = {};
     }    
 
     Game.toggleFocus = function(){
-    	if (controls.mouseX > playerViewPortOne.posX + 5 && controls.mouseY > playerViewPortOne.posY + 5 && controls.mouseX < playerViewPortOne.posX + 5 + playerViewPortOne.width && controls.mouseY < playerViewPortOne.posY + 5 + playerViewPortOne.height) {
+    	if (controls.mouseX > playerViewPortOne.posX && controls.mouseY > playerViewPortOne.posY && controls.mouseX < playerViewPortOne.posX + playerViewPortOne.width && controls.mouseY < playerViewPortOne.posY + playerViewPortOne.height) {
     		mainViewport.focus.currentViewPort = 1;
             playerViewPortOne.focus.currentViewPort = 0;
             var temp = mainViewport.focus;
@@ -371,9 +388,11 @@ window.Game = {};
     		playerViewPortOne.focus = temp;
     		playerViewPortOne.focus.follow = false;
     		playerViewPortTwo.focus.follow = false;
+            Game.buttons[0].on = playerViewPortOne.focus.follow;
+            Game.buttons[2].on = playerViewPortOne.focus.ai;
     	}
 
-    	if (controls.mouseX > playerViewPortTwo.posX + 5 && controls.mouseY > playerViewPortTwo.posY + 5 && controls.mouseX < playerViewPortTwo.posX + 5 + playerViewPortTwo.width && controls.mouseY < playerViewPortTwo.posY + 5 + playerViewPortTwo.height) {
+    	if (controls.mouseX > playerViewPortTwo.posX && controls.mouseY > playerViewPortTwo.posY && controls.mouseX < playerViewPortTwo.posX + playerViewPortTwo.width && controls.mouseY < playerViewPortTwo.posY + playerViewPortTwo.height) {
             mainViewport.focus.currentViewPort = 2;
             playerViewPortTwo.focus.currentViewPort = 0;
     		var temp = mainViewport.focus;
@@ -383,6 +402,8 @@ window.Game = {};
     		playerViewPortTwo.focus = temp;
     		playerViewPortOne.focus.follow = false;
     		playerViewPortTwo.focus.follow = false;
+            Game.buttons[1].on = playerViewPortTwo.focus.follow;
+            Game.buttons[3].on = playerViewPortTwo.focus.ai;
     	}    	
     }
 
@@ -410,7 +431,6 @@ window.Game = {};
             }
         }
     }
-
 })();
 
 

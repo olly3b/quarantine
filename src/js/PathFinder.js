@@ -97,8 +97,11 @@ PathFinder.prototype.isNodeinOpenList = function(node) {
 }
 
 PathFinder.prototype.isTileValid = function(node) {
-    if (this.map[node.y][node.x] == 3) {
-        return false;
+    switch (this.map[node.y][node.x]) {
+        case 2:
+        case 3:
+            return false;
+        break;
     }
 
     return true;
