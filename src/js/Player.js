@@ -124,7 +124,7 @@ Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, pla
 		if (this.follow) {
 			this.setPath(pathFinder.findPath(this, mainViewPort.focus));				
 
-			if (this.path != null) {
+			if (this.path != null && !this.fireDelay) {
 				for (var p = 0; p < this.currentViewPort; p++) {
 					this.path.pop(this.path.length - 1);
 				}
@@ -132,11 +132,15 @@ Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, pla
 				this.faceCurrentNode();
 				this.walkForwards(step);
 			} else {
-				this.setAnimation(0);
+				if (this.fireDelay) {
+					this.setAnimation(2);
+				} else {
+					this.setAnimation(0);
+				}
 			}	
 		}
 
-		if (this.ai) {
+		if (this.ai && this.equipped.ammo > 0 && !this.fireDelay) {
 			if (this.AIShoot(monsters, map)) {
 				return true;
 			}
@@ -250,12 +254,16 @@ Player.prototype.canSeeMonster = function(monsters, map) {
 
 Player.prototype.shoot = function() {	
 	if (!this.fireDelay) {
-		if (this.equipped.ammo > 0) {
-			this.fireDelay = true;
-			this.fireCounter = 0;
-			this.setAnimation(3);
-			this.equipped.ammo--;
-			return true;
+		if (this.equipped.itemType == 'weapon') {
+			if (this.equipped.itemName == 'pistol') {
+				if (this.equipped.ammo > 0) {
+					this.fireDelay = true;
+					this.fireCounter = 0;
+					this.setAnimation(3);
+					this.equipped.ammo--;
+					return true;
+				}
+			}
 		}
 	}
 
