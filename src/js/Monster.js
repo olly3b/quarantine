@@ -22,15 +22,17 @@ Monster.prototype.update = function(step, players, pathFinder, animations, sound
 
 	if (this.alive) {
 		// This function does not need to run every frame
-		if (this.findInterval == Math.floor((Math.random()*20)+1)) {
+		if (this.findInterval == Math.floor((Math.random() * 20) + 1)) {
 
 			var c = this.findClosestPlayer(players);
 			this.playerTarget = c;
 			this.setPath(pathFinder.findPath(this, players[c]));
 		}
 
-		this.faceCurrentNode();
-		this.walkForwards(step);
+		if (this.path != null) {
+			this.faceCurrentNode();
+			this.walkForwards(step);
+		}
 
 		this.frameCounter++;
 		if (this.frameCounter > animations[this.currentAnimation].frames[this.currentFrame].length) {
@@ -47,8 +49,12 @@ Monster.prototype.update = function(step, players, pathFinder, animations, sound
 		}
 	}
 
+	this.randomMoan(sounds);
+}
+
+Monster.prototype.randomMoan = function(sounds) {
 	if (Math.floor((Math.random() * 600) + 1) == 1) {
-		sounds[Math.floor((Math.random() * sounds.length) + 1)].play();
+		sounds[Math.floor((Math.random() * sounds.length - 1) + 1)].play();
 	}
 }
 

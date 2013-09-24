@@ -28,6 +28,14 @@ window.Game = {};
     var bullets = new Array();
     var spawners = new Array();  
 
+    Game.buttons = new Array();
+    Game.buttons.push(new Button(647, 205, 95, 20, 'img/follow.png')); // Follow 1
+    Game.buttons.push(new Button(647, 445, 95, 20, 'img/follow.png')); // Follow 2
+    Game.buttons.push(new Button(747, 205, 95, 20, 'img/ai.png')); // AI 1
+    Game.buttons.push(new Button(747, 445, 95, 20, 'img/follow.png')); // AI 2
+    //drawContext.fillRect(645, 205, 50, 20);
+    //drawContext.fillRect(645, 445, 50, 20);
+
     var pathFinder = new PathFinder(map.dynamicMap);;
     
     var spriteSheet = new Image();
@@ -76,6 +84,7 @@ window.Game = {};
         updateMonsters();    	
     	updateBullets();
     	updateSpawners();	
+        updateButtons();
     }
 
     Game.initialiseGame = function() {
@@ -141,6 +150,12 @@ window.Game = {};
         }       
     }
 
+    var updateButtons = function() {
+        for (var b = 0; b < Game.buttons.length; b++) {
+            Game.buttons[b].update(controls.mouseX, controls.mouseY);
+        }
+    }
+
     // Game draw function
     var draw = function() {
         clearCanvas();        
@@ -148,6 +163,7 @@ window.Game = {};
         drawPlayers();
         drawMonsters();
         drawBullets();
+        drawInterface();
         drawViewPorts();
         drawButtons();
         drawCursor();
@@ -187,9 +203,9 @@ window.Game = {};
     }
 
     var drawButtons = function() {
-        drawContext.fillStyle = '#0000FF';
-        drawContext.fillRect(645, 205, 50, 20);
-        drawContext.fillRect(645, 445, 50, 20);
+        for (var b = 0; b < Game.buttons.length; b++) {
+            Game.buttons[b].draw(drawContext);
+        }
     }
 
     var drawCursor = function() {
@@ -198,6 +214,81 @@ window.Game = {};
         drawContext.arc(controls.mouseX, controls.mouseY, 5, 0, Math.PI * 2, false);
         drawContext.closePath();
         drawContext.stroke();
+    }
+
+    var drawInterface = function() {
+        // Background
+        drawContext.fillStyle = '#BBBBBB';
+        drawContext.fillRect(0, 0, 1280, 600);
+
+        drawContext.strokeStyle = '#000000';
+        // Main focus equipped
+        drawContext.strokeRect(5, 485, 64, 64);
+
+        // Main focus invenory
+        drawContext.strokeRect(74, 485, 32, 32);
+        drawContext.strokeRect(74, 517, 32, 32);
+        drawContext.strokeRect(106, 485, 32, 32);
+        drawContext.strokeRect(106, 517, 32, 32);
+        drawContext.strokeRect(138, 485, 32, 32);
+        drawContext.strokeRect(138, 517, 32, 32);
+
+        // Player one viewport equipped
+        drawContext.strokeRect(850, 136, 64, 64);
+
+        // Player two viewport equipped
+        drawContext.strokeRect(850, 374, 64, 64);
+
+        drawContext.fillStyle = '#000000';
+        // Main viewport equipped item
+        if (mainViewport.focus.equipped != null) {
+            if (mainViewport.focus.equipped.itemType = 'weapon') {
+                if (mainViewport.focus.equipped.itemName == 'pistol') {
+                    drawContext.drawImage(spriteSheet, 0, 128, 32, 32, 5, 486, 64, 64);
+                    drawContext.fillText(mainViewport.focus.equipped.ammo, 50, 545);
+                }
+            }
+        }
+
+        // Main viewport inventory
+        for (var i = 0; i < 2; i++) {
+            if (mainViewport.focus.inventory[i] != null) {
+                if (mainViewport.focus.inventory[i].itemType = 'ammo') {
+                    if (mainViewport.focus.inventory[i].itemName == 'pistol') {
+                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 74 + (i * 32), 485, 32, 32);
+                    }
+                }
+            }
+        }
+        for (var i = 3; i < 6; i++) {
+            if (mainViewport.focus.inventory[i] != null) {
+                if (mainViewport.focus.inventory[i].itemType = 'ammo') {
+                    if (mainViewport.focus.inventory[i].itemName == 'pistol') {
+                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 74 + (i * 32), 517, 32, 32);
+                    }
+                }
+            }
+        }
+
+          // Player one viewport equipped item
+        if (playerViewPortOne.focus.equipped != null) {
+            if (playerViewPortOne.focus.equipped.itemType = 'weapon') {
+                if (playerViewPortOne.focus.equipped.itemName == 'pistol') {
+                    drawContext.drawImage(spriteSheet, 0, 128, 32, 32, 850, 136, 64, 64);
+                    drawContext.fillText(playerViewPortOne.focus.equipped.ammo, 895, 196);
+                }
+            }
+        }
+
+          // player two viewport equipped item
+        if (playerViewPortTwo.focus.equipped != null) {
+            if (playerViewPortTwo.focus.equipped.itemType = 'weapon') {
+                if (playerViewPortTwo.focus.equipped.itemName == 'pistol') {
+                    drawContext.drawImage(spriteSheet, 0, 128, 32, 32, 850, 374, 64, 64);
+                    drawContext.fillText(playerViewPortTwo.focus.equipped.ammo, 895, 434);
+                }
+            }
+        }
     }
 
     var drawDebug = function() {
@@ -295,13 +386,29 @@ window.Game = {};
     	}    	
     }
 
-    Game.clickFollow = function() {
-    	if (controls.mouseX > 644 && controls.mouseX < 696 && controls.mouseY > 204 && controls.mouseY < 226) {
-    		playerViewPortOne.focus.follow = !playerViewPortOne.focus.follow;
-    	}
-    	if (controls.mouseX > 644 && controls.mouseX < 696 && controls.mouseY > 444 && controls.mouseY < 466) {
-    		playerViewPortTwo.focus.follow = !playerViewPortTwo.focus.follow;
-    	}
+    Game.checkButtonClick = function() {
+        for (var b = 0; b < Game.buttons.length; b++) {
+            if (controls.mouseX > Game.buttons[b].x && controls.mouseX < Game.buttons[b].x + Game.buttons[b].width) {
+                if (controls.mouseY > Game.buttons[b].y && controls.mouseY < Game.buttons[b].y + Game.buttons[b].height) {
+                    Game.buttons[b].clicked();
+
+                    switch (b) {
+                        case 0:
+                            playerViewPortOne.focus.follow = !playerViewPortOne.focus.follow;
+                        break;
+                        case 1:
+                            playerViewPortTwo.focus.follow = !playerViewPortTwo.focus.follow;
+                        break;
+                        case 2:
+                            playerViewPortOne.focus.ai = !playerViewPortOne.focus.ai;
+                        break;
+                        case 3:
+                            playerViewPortTwo.focus.ai = !playerViewPortTwo.focus.ai;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
 })();

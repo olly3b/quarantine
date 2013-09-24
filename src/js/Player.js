@@ -20,6 +20,10 @@ function Player(x, y, player) {
 	this.currentAnimation = 0;
 	this.currentFrame = 0;
 	this.frameCounter = 0;
+	this.equipped = new Item('weapon', 'pistol');
+	this.inventory = new Array();
+	this.inventory.push(new Item('ammo', 'pistol'));
+	this.ai = false;
 }
 
 Player.prototype.draw = function(context, spriteSheet, animations) {
@@ -118,22 +122,24 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, player, animations, map) {
 	if (!this.focus) {		
 		if (this.follow) {
-			//if (this.findInterval == Math.floor((Math.random()*20)+1)) {
-				this.setPath(pathFinder.findPath(this, mainViewPort.focus));				
-			//}
-			for (var p = 0; p < this.currentViewPort; p++) {
+			this.setPath(pathFinder.findPath(this, mainViewPort.focus));				
 
-				this.path.pop(this.path.length - 1);
+			if (this.path != null) {
+				for (var p = 0; p < this.currentViewPort; p++) {
+					this.path.pop(this.path.length - 1);
+				}
+
+				this.faceCurrentNode();
+				this.walkForwards(step);
+			} else {
+				this.setAnimation(0);
+			}	
+		}
+
+		if (this.ai) {
+			if (this.AIShoot(monsters, map)) {
+				return true;
 			}
-
-			this.faceCurrentNode();
-			this.walkForwards(step);
-		} else {
-			this.setAnimation(0);
-		}	
-
-		if (this.AIShoot(monsters, map)) {
-			return true;
 		}
 	}
 
@@ -244,10 +250,13 @@ Player.prototype.canSeeMonster = function(monsters, map) {
 
 Player.prototype.shoot = function() {	
 	if (!this.fireDelay) {
-		this.fireDelay = true;
-		this.fireCounter = 0;
-		this.setAnimation(3);
-		return true;
+		if (this.equipped.ammo > 0) {
+			this.fireDelay = true;
+			this.fireCounter = 0;
+			this.setAnimation(3);
+			this.equipped.ammo--;
+			return true;
+		}
 	}
 
 	this.setAnimation(2);

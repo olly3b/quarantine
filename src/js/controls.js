@@ -70,5 +70,8 @@
 
     window.addEventListener("mousedown", function(e) {
         Game.toggleFocus();
-        Game.clickFollow();
+        Game.checkButtonClick();
+        for(var b = 0; b < Game.buttons.length; b++) {
+            Game.buttons[b].update(controls.mouseX, controls.mouseY);
+        }
     }, false);

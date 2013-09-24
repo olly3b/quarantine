@@ -1,6 +1,6 @@
 function PathFinder(map) {
     this.map = map;
-    this.density = 5000;
+    this.density = 500;
     this.startX = 0;
     this.startY = 0;
     this.destX = 0;
@@ -35,7 +35,6 @@ PathFinder.prototype.findPath = function(object, target) {
 
         // Validate new nodes for openlist
         for (var a = 0; a < this.adjacentNodes.length; a++) {
-
             if (!this.isOpenListEmpty()) {
                 if (!this.isNodeInClosedList(this.adjacentNodes[a])) {
                     if (!this.isNodeinOpenList(this.adjacentNodes[a])) {
@@ -54,62 +53,22 @@ PathFinder.prototype.findPath = function(object, target) {
             this.currentIndex = this.getLowestFIndex();
         }
 
-            //if (this.openList.length > 0) { // Skip this if open list is empty
-                // for (var o = 0; o < this.openList.length; o++) { // Check node not in open list
-                //     if (this.adjacentNodes[a].x == this.openList[o].x && this.adjacentNodes[a].y == this.openList[o].y) {  
-                //         flag = true;
+        // Add to closed list
+        this.closedList.push(this.currentNode);
 
-                //          // If node is in open list then recalculate G and F
-                //         if (this.adjacentNodes[a].f < this.openList[o].f) {
-                //             this.openList[o] = this.adjacentNodes[a];
-                //         }
-                //     } 
-                // }
-            //}
+        // Remove from open list
+        this.openList.splice(this.currentIndex, 1);
 
-            // Check map tile is valid for travel
-            // if (this.map[this.adjacentNodes[a].y][this.adjacentNodes[a].x] == 3) {
-            //     flag = true;
-            // }
+        // I can't remember what this is but its probably important
+        if (this.currentNode == null) {
+            return null;
+        }
 
-            // If all checks passed then add the node to the open list
-            // if (!flag) {
-            //     this.openList.push(this.adjacentNodes[a]);
-            // }
+        if (this.isDestinationReached()) {
+            var path = this.generatePath();
 
-        // Find lowest F score
-        // this.currentNode = this.openList[0];
-        // this.currentIndex = 0;
-        // for (var o = 1; o < this.openList.length; o++) {
-        //     if (this.openList[o].f < this.currentNode.f) {
-        //         this.currentNode = this.openList[o];
-        //         this.currentIndex = o;
-        //     }
-        // }
-
-            // Add to closed list
-            this.closedList.push(this.currentNode);
-
-            // Remove from open list
-            this.openList.splice(this.currentIndex, 1);
-
-            // I can't remember what this is but its probably important
-            if (this.currentNode == null) {
-                return new Array();
-            }
-
-            // When the destination is reached calculate the path        
-            if (this.currentNode.x == this.destX && this.currentNode.y == this.destY) {
-                var path = new Array();
-
-                path.push(this.closedList[this.closedList.length - 1]);
-
-                while(path[path.length - 1].parent.x != this.startX || path[path.length - 1].parent.y != this.startY) {
-                    path.push(path[path.length - 1].parent);
-                }
-
-                return path.reverse(); // Doesn't include starting node
-        }        
+            return path.reverse();
+        }
     }
 }
 
@@ -180,6 +139,26 @@ PathFinder.prototype.getLowestFIndex = function() {
     }
 
     return index;
+}
+
+PathFinder.prototype.isDestinationReached = function() {
+    if (this.currentNode.x == this.destX && this.currentNode.y == this.destY) {
+        return true;
+    }
+
+    return false;
+}
+
+PathFinder.prototype.generatePath = function() {
+    var path = new Array();
+
+     path.push(this.closedList[this.closedList.length - 1]);
+
+    while(path[path.length - 1].parent.x != this.startX || path[path.length - 1].parent.y != this.startY) {
+        path.push(path[path.length - 1].parent);
+    }
+
+    return path;
 }
 
 PathFinder.prototype.findAdjacentNodes = function() {
