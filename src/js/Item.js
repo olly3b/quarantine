@@ -11,6 +11,11 @@ function Item(itemType, itemName) {
 	this.ammo = 0;
 	this.imageX = 0;
 	this.imageY = 0;
+	this.x = 0;
+	this.y = 0;
+	this.width = 32;
+	this.height = 32;
+	this.angle = 0;
 
 	this.initialise();
 }
@@ -38,4 +43,13 @@ Item.prototype.initialise = function() {
 			this.imageY = 128;			
 		}
 	}
+}
+
+Item.prototype.draw = function(context, spriteSheet) {
+	context.save();
+	context.translate(this.x, this.y);
+	context.translate(this.width / 2, this.height / 2);
+	context.rotate(this.angle); 	
+	context.drawImage(spriteSheet, this.imageX, this.imageY, this.width, this.height, -this.width / 2, -this.height / 2, 32, 32);	
+	context.restore();
 }

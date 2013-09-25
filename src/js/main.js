@@ -18,7 +18,9 @@ window.Game = {};
     var STEP = INTERVAL/1000 // seconds
 
     var map = new Map(1280, 960, 'img/map.png');
-    
+    var spriteSheet = new Image();
+    spriteSheet.src = 'img/spritesheet.png';
+
     var mainViewport = new Viewport(5, 5, 640, 480);
     var playerViewPortOne = new Viewport (650, 5, 200, 200);
     var playerViewPortTwo = new Viewport (650, 245, 200, 200);
@@ -27,12 +29,18 @@ window.Game = {};
     var monsters = new Array();
     var bullets = new Array();
     var spawners = new Array();  
+    var animations = new Array(); 
+    var gunSound = new Array();
+    var zombieSounds = new Array();
+
+    var cursorItem = null;
+    var pathFinder = new PathFinder(map.dynamicMap);;
 
     Game.buttons = new Array();
-    Game.buttons.push(new Button(652, 210, 95, 20, 'img/follow.png')); // Follow 1
-    Game.buttons.push(new Button(652, 450, 95, 20, 'img/follow.png')); // Follow 2
-    Game.buttons.push(new Button(752, 210, 95, 20, 'img/ai.png')); // AI 1
-    Game.buttons.push(new Button(752, 450, 95, 20, 'img/ai.png')); // AI 2
+    Game.buttons.push(new Button(652, 210, 95, 30, 'img/follow.png')); // Follow 1
+    Game.buttons.push(new Button(652, 450, 95, 30, 'img/follow.png')); // Follow 2
+    Game.buttons.push(new Button(752, 210, 95, 30, 'img/ai.png')); // AI 1
+    Game.buttons.push(new Button(752, 450, 95, 30, 'img/ai.png')); // AI 2
 
     var invX = new Array();
     var invY = new Array();
@@ -53,47 +61,7 @@ window.Game = {};
 
     invX.push(142);
     invY.push(522);
-
-    var cursorItem = null;
-
-    var pathFinder = new PathFinder(map.dynamicMap);;
     
-    var spriteSheet = new Image();
-    spriteSheet.src = 'img/spritesheet.png';
-    var animations = new Array();
-    animations.push(new Animation(true)); // Player standing // 0
-    animations[animations.length - 1].addFrame(0, 0, 32, 32, 1);
-    animations.push(new Animation(true)); // Player walking // 1
-    animations[animations.length - 1].addFrame(32, 0, 32, 32, 7);
-    animations[animations.length - 1].addFrame(64, 0, 32, 32, 7);
-    animations.push(new Animation(true)); // Player aiming // 2
-    animations[animations.length - 1].addFrame(96, 0, 32, 32, 1);
-    animations.push(new Animation(false)); // Player shooting // 3
-    animations[animations.length - 1].addFrame(128, 0, 32, 32, 20);    
-    animations[animations.length - 1].addFrame(96, 0, 32, 32, 30);
-    animations.push(new Animation(true)); // Monster standing // 4
-    animations[animations.length - 1].addFrame(0, 96, 32, 32, 1);
-    animations.push(new Animation(true)); // Monster walking  // 5
-    animations[animations.length - 1].addFrame(32, 96, 32, 32, 7);
-    animations[animations.length - 1].addFrame(64, 96, 32, 32, 7);
-
-    var gunSound = new Array();
-    gunSound.push(new Audio('sound/pistol.mp3'));
-    gunSound.push(new Audio('sound/pistol.mp3'));
-    gunSound.push(new Audio('sound/pistol.mp3'));
-
-    var zombieSounds = new Array();
-    zombieSounds.push(new Audio('sound/zombie1.mp3'));
-    zombieSounds.push(new Audio('sound/zombie2.mp3'));
-    zombieSounds.push(new Audio('sound/zombie3.mp3'));
-    zombieSounds.push(new Audio('sound/zombie4.mp3'));
-    zombieSounds.push(new Audio('sound/zombie5.mp3'));
-
-	spawners.push(new Spawner(1, 1));
-	spawners.push(new Spawner(1, 2));
-	spawners.push(new Spawner(1, 27));
-	spawners.push(new Spawner(1, 28));
-
     var debugOn = false;
 
     // Game update function
@@ -111,6 +79,37 @@ window.Game = {};
         players.push(new Player ('Zara', 416, 616, 0));
         players.push(new Player ('Lila', 416, 584, 1));
         players.push(new Player ('Nico', 416, 552, 2));
+
+        animations.push(new Animation(true)); // Player standing // 0
+        animations[animations.length - 1].addFrame(0, 0, 32, 32, 1);
+        animations.push(new Animation(true)); // Player walking // 1
+        animations[animations.length - 1].addFrame(32, 0, 32, 32, 7);
+        animations[animations.length - 1].addFrame(64, 0, 32, 32, 7);
+        animations.push(new Animation(true)); // Player aiming // 2
+        animations[animations.length - 1].addFrame(96, 0, 32, 32, 1);
+        animations.push(new Animation(false)); // Player shooting // 3
+        animations[animations.length - 1].addFrame(128, 0, 32, 32, 20);    
+        animations[animations.length - 1].addFrame(96, 0, 32, 32, 30);
+        animations.push(new Animation(true)); // Monster standing // 4
+        animations[animations.length - 1].addFrame(0, 96, 32, 32, 1);
+        animations.push(new Animation(true)); // Monster walking  // 5
+        animations[animations.length - 1].addFrame(32, 96, 32, 32, 7);
+        animations[animations.length - 1].addFrame(64, 96, 32, 32, 7);
+
+        gunSound.push(new Audio('sound/pistol.mp3'));
+        gunSound.push(new Audio('sound/pistol.mp3'));
+        gunSound.push(new Audio('sound/pistol.mp3'));
+
+        zombieSounds.push(new Audio('sound/zombie1.mp3'));
+        zombieSounds.push(new Audio('sound/zombie2.mp3'));
+        zombieSounds.push(new Audio('sound/zombie3.mp3'));
+        zombieSounds.push(new Audio('sound/zombie4.mp3'));
+        zombieSounds.push(new Audio('sound/zombie5.mp3'));
+
+        spawners.push(new Spawner(1, 1));
+        spawners.push(new Spawner(1, 2));
+        spawners.push(new Spawner(1, 27));
+        spawners.push(new Spawner(1, 28));
 
         mainViewport.focus = players[0];
         players[0].focus = true;
@@ -179,6 +178,7 @@ window.Game = {};
     var draw = function() {
         clearCanvas();        
       	map.draw(context);
+        drawItems();
         drawPlayers();
         drawMonsters();
         drawBullets();
@@ -215,6 +215,12 @@ window.Game = {};
         }
     }
 
+    var drawItems = function() {
+        for (var i = 0; i < map.items.length; i++) {
+           map.items[i].draw(context, spriteSheet);
+        }
+    }
+
     var drawViewPorts = function() {
         drawContext.drawImage(gameCanvas, mainViewport.x, mainViewport.y, mainViewport.width, mainViewport.height, mainViewport.posX, mainViewport.posY, mainViewport.width, mainViewport.height);
         drawContext.drawImage(gameCanvas, playerViewPortOne.x, playerViewPortOne.y, playerViewPortOne.width, playerViewPortOne.height, playerViewPortOne.posX, playerViewPortOne.posY, playerViewPortOne.width, playerViewPortOne.height);
@@ -227,16 +233,16 @@ window.Game = {};
             drawContext.font = '18px Verdana';
             drawContext.fillStyle = '#FFFFFF'
             if (b == 0) {
-                drawContext.fillText('Follow', 674, 227);
+                drawContext.fillText('Follow', 674, 232);
             }
             if (b == 1) {
-                drawContext.fillText('Follow', 674, 467);
+                drawContext.fillText('Follow', 674, 472);
             }
             if (b == 2) {
-                drawContext.fillText('AI', 785, 227);
+                drawContext.fillText('AI', 785, 232);
             }
             if (b == 3) {
-                drawContext.fillText('AI', 785, 467);
+                drawContext.fillText('AI', 785, 472);
             }
         }
         drawContext.font = '12px Verdana';
@@ -335,17 +341,8 @@ window.Game = {};
 
     var drawDebug = function() {
         drawContext.fillStyle = '#000000';
-	  	//drawContext.fillText('x: ' + Math.floor(mainViewport.x) + ' y: ' + Math.floor(mainViewport.y), 10, 10);
-	   	//drawContext.fillText('x: ' + Math.floor(playerViewPortOne.x) + ' y: ' + Math.floor(playerViewPortOne.y), 645, 10);      	
-	  	//drawContext.fillText('x: ' + Math.floor(playerViewPortTwo.x) + ' y: ' + Math.floor(playerViewPortTwo.y), 645, 175);
-	  	//drawContext.fillText('x: ' + Math.floor(playerViewPortThree.x) + ' y: ' + Math.floor(playerViewPortThree.y), 645, 340);
-	  	drawContext.fillText(controls.up, 30, 30);
-	  	drawContext.fillText(controls.right, 45, 40);
-	  	drawContext.fillText(controls.left, 15, 40);
-	  	drawContext.fillText(controls.down, 30, 50);
-	  	//drawContext.fillText('p1x: ' + Math.floor(playerOne.x) + ' p1y: ' + Math.floor(playerOne.y), 10, 70);
 	  	drawContext.fillText('mx: ' + Math.floor(controls.mouseX) + ' my: ' + Math.floor(controls.mouseY), 10, 90);
-	  	//drawContext.fillText('a: ' + -Math.floor(playerOne.angle * (180/Math.PI)), 10, 100);
+	  	drawContext.fillText('a: ' + -Math.floor(playerOne.angle * (180 / Math.PI)), 10, 100);
 	  	drawContext.fillText('tiles: ' + map.tilesX + ' x ' + map.tilesY, 10, 110)
 
 	  	// Draw path
@@ -524,6 +521,16 @@ window.Game = {};
                     }                
                 }
 
+            }
+        }
+
+        if (controls.mouseX > mainViewport.posX && controls.mouseX < mainViewport.posX + mainViewport.width) {
+            if (controls.mouseY > mainViewport.posY && controls.mouseY < mainViewport.posY + mainViewport.height) {
+                map.items.push(new Item(cursorItem.itemType, cursorItem.itemName));
+                map.items[map.items.length - 1].ammp = cursorItem.ammo;
+                map.items[map.items.length - 1].x = mainViewport.focus.x;
+                map.items[map.items.length - 1].y = mainViewport.focus.y;
+                cursorItem = null;
             }
         }
     }

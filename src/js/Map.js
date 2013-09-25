@@ -14,6 +14,8 @@ function Map(width, height, image) {
 	this.tiles.push(new Image()); // Blank
 	this.tiles.push(new Image());
 	this.tiles[this.tiles.length - 1].src = 'img/wall.png';
+
+	this.items = new Array();
 }
 
 Map.prototype.draw = function(context) {

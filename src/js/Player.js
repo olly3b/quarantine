@@ -32,29 +32,46 @@ function Player(name, x, y, player) {
 	this.inventory = new Array();
 	this.inventory.push(new Item('ammo', 'pistol'));
 	this.inventory.push(new Item('ammo', 'pistol'));
-	this.inventory.push(new Item('ammo', 'pistol'));
 }
 
 Player.prototype.controlUpdate = function(step, viewport, map) {
+	this.lookAtMouse(viewport);
+
+	var oldX = this.x;
+	var oldY = this.y;
+
+	if (!controls.left && !controls.right && !controls.up && !controls.down && !this.fireDelay) {
+		this.setAnimation(0);
+	}
+
+	var newBullet = false;
+
+	if (!this.fireDelay) {
+		if (this.isFirePressed()) { newBullet = this.shoot(); }
+	}
+
+	this.horizontalInputUpdate(step);
+	this.checkHorizontalCollision(map, oldX);
+
+	this.verticalInputUpdate(step);
+	this.checkVerticalCollision(map, oldY);
+	
+	return newBullet;
+}
+
+Player.prototype.lookAtMouse = function(viewport) {
 	this.angle = Math.atan2((controls.mouseY + viewport.y) - this.y - (this.height / 2), (controls.mouseX + viewport.x) - this.x - (this.width / 2));
 
 	this.angle = this.angle * (180 / Math.PI); 
 	this.angle -= 90;
 	this.angle = this.angle * (Math.PI / 180);	
+}
 
-	var oldX = this.x;
-	var oldY = this.y;
+Player.prototype.isFirePressed = function() {
+	return controls.space;
+}
 
-	//if (!controls.left && !controls.right && !controls.up && !controls.down && !controls.space && !this.fireDelay) {
-	if (!controls.left && !controls.right && !controls.up && !controls.down && !this.fireDelay) {
-		this.setAnimation(0);
-	}
-
-	var b = false;
-	if (!this.fireDelay) {
-		if (controls.space) { b = this.shoot(); }
-	}
-
+Player.prototype.horizontalInputUpdate = function(step) {
 	if (!this.fireDelay) {
 		if(controls.left) {
 			this.x -= this.speed * step;
@@ -70,7 +87,26 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 			}
 		}
 	}
-	
+}
+
+Player.prototype.verticalInputUpdate = function(step) {
+	if (!this.fireDelay) {
+		if(controls.up) {
+			this.y -= this.speed * step;
+			if (this.currentAnimation != 1) {
+				this.setAnimation(1);
+			}
+		}
+		if(controls.down) {		
+			this.y += this.speed * step;  
+			if (this.currentAnimation != 1) {
+				this.setAnimation(1);		
+			}
+		}
+	}
+}
+
+Player.prototype.checkHorizontalCollision = function(map, oldX) {		
 	for(var ay = 0; ay < map.dynamicMap.length ; ay++) {
 		for(var ax = 0; ax < map.dynamicMap[ay].length; ax++) {
 		 		
@@ -89,23 +125,9 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 		 	}
 		}
 	}
+}
 
-	if (!this.fireDelay) {
-
-		if(controls.up) {
-			this.y -= this.speed * step;
-			if (this.currentAnimation != 1) {
-				this.setAnimation(1);
-			}
-		}
-		if(controls.down) {		
-			this.y += this.speed * step;  
-			if (this.currentAnimation != 1) {
-				this.setAnimation(1);		
-			}
-		}
-	}
-
+Player.prototype.checkVerticalCollision = function(map, oldY) {
 	for(var ay = 0; ay < map.dynamicMap.length ; ay++) {
 		for(var ax = 0; ax < map.dynamicMap[ay].length; ax++) {
 		 		
@@ -124,20 +146,16 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 		 	}
 		}
 	}
-	
-	return b;
 }
 
 Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, player, animations, map) {
-	if (!this.focus) {		
-		if (this.follow) {
+	if (!this.isMainFocus()) {		
+		if (this.isFollowing()) {
 			this.setNewPath(pathFinder.findPath(this, mainViewPort.focus));				
 
 			if (this.path != null && !this.fireDelay) {
-				for (var p = 0; p < this.currentViewPort; p++) {
-					this.path.pop(this.path.length - 1);
-				}
-				this.faceCurrentNode();
+				this.trimPath();
+				this.faceCurrentNode();	
 				this.walkForwards(step);
 			} else {
 				if (this.fireDelay) {
@@ -152,129 +170,188 @@ Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, pla
 			}
 		}
 
-		if (this.ai && !this.fireDelay) {
+		if (this.isAIOn() && !this.fireDelay) {
 			if (this.AIShoot(monsters, map)) {
 				return true;
 			}
 		}
 	}
 
-	this.fireCounter++;
-	if (this.fireCounter >= this.fireRate) {		
-		this.fireDelay = false;
-	}
+	this.updateShotStun();
+	this.updateAnimation(animations);
+}
 
-	this.frameCounter++;
-	if (this.frameCounter > animations[this.currentAnimation].frames[this.currentFrame].length) {
-		this.frameCounter = 0;
-		this.currentFrame++;
-		if (this.currentFrame >= animations[this.currentAnimation].frames.length) {
-			if (animations[this.currentAnimation].looping) {
-				this.currentFrame = 0;
+Player.prototype.isAIOn = function() {
+	return this.ai;
+}
+
+Player.prototype.isFollowing = function() {
+	return this.follow;
+}
+
+Player.prototype.trimPath = function() {
+	for (var p = 0; p < this.currentViewPort; p++) {
+		this.path.pop(this.path.length - 1);
+	}
+}
+
+Player.prototype.updateShotStun = function() {
+	this.increaseShotStunCounter();
+	if (this.isShotStunFinished()) {		
+		this.endShotStun();
+	}
+}
+
+Player.prototype.increaseShotStunCounter = function() {
+	this.fireCounter++;
+}
+
+Player.prototype.isShotStunFinished = function() {
+	return this.fireCounter >= this.fireRate;
+}
+
+Player.prototype.endShotStun = function() {
+	this.fireDelay = false;
+}
+
+
+Player.prototype.updateAnimation = function(animations) {
+	this.increaseFrameCounter();
+	if (this.isEndOfCurrentFrame(animations)) {
+		this.resetFrameCounter();
+		this.increaseCurrentFrame();
+		if (this.isEndOfCurrentAnimation(animations)) {
+			if (this.isCurrentAnimationLooping(animations)) {
+				this.resetCurrentFrame();
 			} else {
-				this.currentAnimation = 0;
-				this.currentFrame = 0;
+				this.setAnimation(4);
+				this.resetCurrentFrame;
 			}
 		}
 	}
 }
 
+Player.prototype.increaseFrameCounter = function() {
+	this.frameCounter++;
+}
 
+Player.prototype.isEndOfCurrentFrame = function(animations) {
+	return this.frameCounter > animations[this.currentAnimation].frames[this.currentFrame].length;
+}
+
+Player.prototype.resetFrameCounter = function() {
+	this.frameCounter = 0;
+}
+
+Player.prototype.increaseCurrentFrame = function() {
+	this.currentFrame++;
+}
+
+Player.prototype.isEndOfCurrentAnimation = function(animations) {
+	return this.currentFrame >= animations[this.currentAnimation].frames.length;
+}
+
+Player.prototype.isCurrentAnimationLooping = function(animations) {
+	return animations[this.currentAnimation].looping;
+}
+
+Player.prototype.resetCurrentFrame = function() {
+	this.currentFrame = 0;
+}
 
 Player.prototype.AIShoot = function(monsters, map) {
 	var m = this.findClosestMonster(monsters);
-	if (m != null) {		
-		//if (this.canSeeMonster(monsters, map)) {
-			this.aimAt(monsters[m]);
-			return this.shoot();
-		//}
+	if (this.isMonsterFound(m)) {		
+		this.aimAt(monsters[m]);
+		return this.shoot();
 	}
 
 	return false;
 }
 
-// Player.prototype.canSeeMonster = function(monsters, map) {
-	
-// 	for (var a = 0; a < 360; a++) {
-// 		//var dirX = Math.cos(a + this.angle + 1.57079633); 
-// 		//var dirY = Math.sin(a + this.angle + 1.57079633);
-// 		var dirX = Math.cos(a); 
-// 		var dirY = Math.sin(a);
-
-// 		var posX = this.x;
-// 		var posY = this.y;
-
-// 		var see = false;
-
-// 		for (var s = 0; s < this.sight; s++) {
-// 			posX += dirX;
-// 			posY += dirY;
-
-// 			for (var m = 0; m < monsters.length; m++) {
-// 				if (posX > monsters[m].x && posX < monsters[m].x + monsters[m].width) {
-// 					if (posY > monsters[m].y && posY < monsters[m].y + monsters[m].height) {
-// 						return true;
-// 					}
-// 				}
-// 			}
-
-// 			for(var ay = 0; ay < map.dynamicMap.length ; ay++) {
-// 				for(var ax = 0; ax < map.dynamicMap[ay].length; ax++) {
-				 		
-// 			 		var tile = map.dynamicMap[ay][ax];
-
-// 			 		switch(tile) {		 			
-// 			 			case 3:	
-// 			 				if (posX > ax * 32 && posX < (ax * 32) + 32) {
-// 			 					if (posY > ay * 32 && posY < (ay * 32) + 32) { 									 								 								 								 				
-// 			 						return false;
-// 			 					}		 								 					
-// 			 				}	 			
-// 				 			break;
-// 				 	}
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return false;
-// }
+Player.prototype.isMonsterFound = function(m) {
+	return m != null;
+}
 
 Player.prototype.shoot = function() {	
 	if (this.isCanShoot()) {
-		if (this.equipped.itemName == 'pistol') {
-				this.startShotStun();
-				this.forceSetAnimation(3);
-				this.useAmmo();
+		this.startShotStun();
+		this.forceSetAnimation(3);
+		this.useAmmo();
 
-				return true; // Return true to create a bullet
-		}
+		return true; // Return true to create a bullet
 	} 
 
+	this.AIReload();
+
+	return false;
+}
+
+Player.prototype.AIReload = function() {
 	if (!this.isWeaponLoaded() && !this.focus) {
 		for (var i = 0; i < this.inventory.length; i++) {
-			if (this.inventory[i] != null) {
-				if (this.inventory[i].itemType == 'ammo') {
-					if (this.inventory[i].itemName == this.equipped.itemName) {
-						if (this.inventory[i].ammo > this.equipped.clipSize) {
-							this.equipped.ammo += this.equipped.clipSize;
-							this.inventory[i].ammo -= this.equipped.clipSize;
-						} else {
-							this.equipped.ammo = this.inventory[i].ammo;
-							this.inventory[i].ammo -= this.equipped.clipSize;
-						}
-						if (this.inventory[i].ammo <= 0) {
-							this.inventory[i] = null;
-						}					
-						//this.setAnimation(2); //Change to new reloading animation
-						return false;
+			if (this.isAmmoInInventory(this.inventory[i])) {
+				if (this.isSameTypeAsEquipped(this.inventory[i])) {
+					if (this.inventory[i].ammo > this.equipped.clipSize) {
+						this.fillWeaponFromInventory(this.inventory[i]);
+					} else {
+						this.loadWeaponWithLastAmmo(this.inventory[i]);
 					}
+					if (this.inventory[i].ammo <= 0) {
+						this.inventory[i] = null;
+					}					
+					//this.setAnimation(2); //Change to new reloading animation
+					return false;
 				}
 			}
 		}
 	}
 
 	return false;
+}
+
+Player.prototype.fillWeaponFromInventory = function(item) {
+	this.equipped.ammo += this.equipped.clipSize;
+	this.inventory[i].ammo -= this.equipped.clipSize;
+}
+
+Player.prototype.isSpareAmmoMoreThanClipSize = function(item) {
+	return item.ammo > this.equipped.clipSize;
+}
+
+Player.prototype.loadWeaponWithLastAmmo = function(item) {
+	this.equipped.ammo = item.ammo;
+	item.ammo -= this.equipped.clipSize;
+}
+
+Player.prototype.consumeAmmoReload = function(item) {
+	if (this.isAmmoEmpty(item)) {
+		item = null;
+	}	
+}
+
+Player.prototype.isAmmoEmpty = function(item) {
+	return item.ammo <= 0;
+}
+
+Player.prototype.isSameTypeAsEquipped = function(item) {
+	return item.itemName == this.equipped.itemName;
+}
+
+Player.prototype.isAmmoInInventory = function(slot) {
+	return !this.isInventorySlotEmpty(slot) && this.isItemAmmo(slot);
+}
+
+Player.prototype.isMainFocus = function() {
+	return this.focus;
+}
+
+Player.prototype.isInventorySlotEmpty = function(slot) {
+	return slot == null;
+}
+
+Player.prototype.isItemAmmo = function(item) {
+	return item.itemType == 'ammo';
 }
 
 Player.prototype.isCanShoot = function() {
@@ -286,7 +363,7 @@ Player.prototype.isWeaponLoaded = function() {
 }
 
 Player.prototype.isShotStunOn = function() {
-	return this.fireDelay
+	return this.fireDelay;
 }
 
 Player.prototype.isWeaponEquipped = function() {

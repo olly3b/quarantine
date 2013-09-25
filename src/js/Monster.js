@@ -197,12 +197,12 @@ Monster.prototype.clearPath = function() {
 }
 
 Monster.prototype.findClosestPlayer = function(players) {
-	var highest = 100000;
+	var lowest = 100000;
 	var closestPlayer = 0;
 
 	for (var p = 0; p < players.length; p++) {
-		if (this.isPlayerClosest(players[p], highest)) {
-			highest = this.getManhattanValue(players[p].x, players[p].y);
+		if (this.isPlayerClosest(players[p], lowest)) {
+			lowest = this.getManhattanValue(players[p].x, players[p].y);
 			closestPlayer = p;
 		}
 	}
@@ -210,8 +210,8 @@ Monster.prototype.findClosestPlayer = function(players) {
 	return closestPlayer;
 }
 
-Monster.prototype.isPlayerClosest = function(player, highest) {
-	return this.getManhattanValue(player.x, player.y) < highest;
+Monster.prototype.isPlayerClosest = function(player, lowest) {
+	return this.getManhattanValue(player.x, player.y) < lowest;
 }
 
 Monster.prototype.getManhattanValue = function(x, y) {
