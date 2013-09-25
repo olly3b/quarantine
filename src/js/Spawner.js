@@ -3,8 +3,8 @@ function Spawner(x, y) {
 	this.y = y;
 
 	this.counter = 0;
-	this.frequency = 60;
-	this.amount = 10;
+	this.frequency = 120;
+	this.amount = 5;
 }
 
 Spawner.prototype.update = function() {

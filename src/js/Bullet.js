@@ -7,13 +7,13 @@ function Bullet(player, vx, vy) {
 	this.alive = true;
 	this.size = 1;
 	this.damage = 1;
+	this.crit = 10; // Percentage
+	this.stagger = 75; // Percentage
 }
 
 Bullet.prototype.update = function(monsters, step, map) {
-
-	this.checkBoundaries(map);
-
 	if (this.alive) {
+		this.checkBoundaries(map);
 		this.move(step);
 		this.checkCollisionWithMonster(monsters);
 		this.checkCollisionWithMap(map);		
@@ -24,7 +24,7 @@ Bullet.prototype.checkCollisionWithMonster = function(monsters) {
 	for (var m = 0; m < monsters.length; m++) {
 		if (this.x > monsters[m].x && this.x < monsters[m].x + monsters[m].width) {
 			if (this.y > monsters[m].y && this.y < monsters[m].y + monsters[m].height) {
-				monsters[m].alive = false;
+				monsters[m].takeDamage(this.damage, this.crit);
 				this.killBullet();
 			}
 		}

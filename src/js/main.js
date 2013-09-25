@@ -34,6 +34,28 @@ window.Game = {};
     Game.buttons.push(new Button(752, 210, 95, 20, 'img/ai.png')); // AI 1
     Game.buttons.push(new Button(752, 450, 95, 20, 'img/ai.png')); // AI 2
 
+    var invX = new Array();
+    var invY = new Array();
+    invX.push(79);
+    invY.push(490);
+
+    invX.push(111);
+    invY.push(490);
+
+    invX.push(142);
+    invY.push(490);
+
+    invX.push(79);
+    invY.push(522);
+
+    invX.push(111);
+    invY.push(522);
+
+    invX.push(142);
+    invY.push(522);
+
+    var cursorItem = null;
+
     var pathFinder = new PathFinder(map.dynamicMap);;
     
     var spriteSheet = new Image();
@@ -68,8 +90,8 @@ window.Game = {};
     zombieSounds.push(new Audio('sound/zombie5.mp3'));
 
 	spawners.push(new Spawner(1, 1));
-	spawners.push(new Spawner(1, 2));
-	spawners.push(new Spawner(1, 27));
+	//spawners.push(new Spawner(1, 2));
+	//spawners.push(new Spawner(1, 27));
 	spawners.push(new Spawner(1, 28));
 
     var debugOn = false;
@@ -203,15 +225,36 @@ window.Game = {};
     var drawButtons = function() {
         for (var b = 0; b < Game.buttons.length; b++) {
             Game.buttons[b].draw(drawContext);
+            drawContext.font = '18px Verdana';
+            drawContext.fillStyle = '#FFFFFF'
+            if (b == 0) {
+                drawContext.fillText('Follow', 674, 227);
+            }
+            if (b == 1) {
+                drawContext.fillText('Follow', 674, 467);
+            }
+            if (b == 2) {
+                drawContext.fillText('AI', 785, 227);
+            }
+            if (b == 3) {
+                drawContext.fillText('AI', 785, 467);
+            }
         }
+        drawContext.font = '12px Verdana';
     }
 
     var drawCursor = function() {
-        drawContext.strokeStyle = '#FF0000';
-        drawContext.beginPath();
-        drawContext.arc(controls.mouseX, controls.mouseY, 5, 0, Math.PI * 2, false);
-        drawContext.closePath();
-        drawContext.stroke();
+        if (cursorItem != null) {
+            drawContext.fillStyle = '#000000';
+            drawContext.drawImage(spriteSheet, cursorItem.imageX, cursorItem.imageY, 32, 32, controls.mouseX - 16, controls.mouseY - 16, 32, 32);            
+            drawContext.fillText(cursorItem.ammo, controls.mouseX - 1, controls.mouseY + 14);
+        } else {
+            drawContext.strokeStyle = '#FF0000';
+            drawContext.beginPath();
+            drawContext.arc(controls.mouseX, controls.mouseY, 5, 0, Math.PI * 2, false);
+            drawContext.closePath();
+            drawContext.stroke();
+        }
     }
 
     var drawInterface = function() {
@@ -249,13 +292,13 @@ window.Game = {};
         }
 
         // Main viewport inventory
-        for (var i = 0; i < 2; i++) {
+        for (var i = 0; i < 3; i++) {
             if (mainViewport.focus.inventory[i] != null) {
                 if (mainViewport.focus.inventory[i].itemType = 'ammo') {
                     if (mainViewport.focus.inventory[i].itemName == 'pistol') {
                         drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 79 + (i * 32), 490, 32, 32);
                     }
-                    drawContext.fillText(mainViewport.focus.inventory[i].ammo, 98 + (i * 32), 520);
+                    drawContext.fillText(mainViewport.focus.inventory[i].ammo, 94 + (i * 32), 520);
                 }
             }
         }
@@ -263,9 +306,9 @@ window.Game = {};
             if (mainViewport.focus.inventory[i] != null) {
                 if (mainViewport.focus.inventory[i].itemType = 'ammo') {
                     if (mainViewport.focus.inventory[i].itemName == 'pistol') {
-                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 79 + (i * 32), 522, 32, 32);
+                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 79 + ((i - 3) * 32), 522, 32, 32);
                     }
-                     drawContext.fillText(mainViewport.focus.inventory[i].ammo, 98 + (i * 32), 552);
+                     drawContext.fillText(mainViewport.focus.inventory[i].ammo, 94 + ((i - 3) * 32), 552);
                 }
             }
         }
@@ -428,6 +471,58 @@ window.Game = {};
                         break;
                     }
                 }
+            }
+        }
+        
+        for (var i = 0; i < 6; i++) {
+            if (controls.mouseX > invX[i] && controls.mouseX < invX[i] + 32 && controls.mouseY > invY[i] && controls.mouseY < invY[i] + 32) {
+                if (cursorItem != null) {
+                    if (mainViewport.focus.inventory[i] == null) {
+                        mainViewport.focus.inventory[i] = cursorItem;
+                        cursorItem = null;
+                    } else {
+                        if (cursorItem.itemType == 'ammo' && mainViewport.focus.inventory[i].itemType == 'ammo') {
+                            if (cursorItem.itemName == 'pistol' && mainViewport.focus.inventory[i].itemName == 'pistol') {
+                                if (mainViewport.focus.inventory[i].ammo > mainViewport.focus.inventory[i].clipSize) {
+                                    cursorItem.ammo += mainViewport.focus.inventory[i].clipSize;
+                                    mainViewport.focus.inventory[i].ammo -= mainViewport.focus.inventory[i].clipSize;
+                                } else {
+                                    cursorItem.ammo += mainViewport.focus.inventory[i].ammo;
+                                    mainViewport.focus.inventory[i] = null;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if (mainViewport.focus.inventory[i].itemType == 'ammo') {
+                        if (mainViewport.focus.inventory[i].ammo > mainViewport.focus.inventory[i].clipSize) {
+                            mainViewport.focus.inventory[i].ammo -= mainViewport.focus.inventory[i].clipSize;
+                            cursorItem = new Item('ammo', mainViewport.focus.inventory[i].itemName);
+                        } else {
+                            cursorItem = mainViewport.focus.inventory[i];
+                            mainViewport.focus.inventory[i] = null;
+                        }
+                    } else {
+                        cursorItem = mainViewport.focus.inventory[i];
+                        mainViewport.focus.inventory[i] = null;
+                    }
+                }
+            }      
+        }
+
+        if (controls.mouseX > 10 && controls.mouseX < 74 && controls.mouseY > 491 && controls.mouseY < 555) {
+            if (cursorItem.itemType == 'ammo' && mainViewport.focus.equipped.itemType == 'weapon') {
+                if (cursorItem.itemName == 'pistol' && mainViewport.focus.equipped.itemName == 'pistol') {
+                    var t = mainViewport.focus.equipped.clipSize - mainViewport.focus.equipped.ammo;
+                    if (cursorItem.ammo > t) {
+                        cursorItem.ammo -= t;
+                        mainViewport.focus.equipped.ammo += t;
+                    } else {
+                        mainViewport.focus.equipped.ammo += cursorItem.ammo;
+                        cursorItem = null;
+                    }                
+                }
+
             }
         }
     }

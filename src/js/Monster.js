@@ -11,11 +11,15 @@ function Monster(x, y, image) {
 	this.width = 32;
 	this.height = 32;
 	this.alive = true;
-	this.findInterval = Math.floor((Math.random()*20)+1);
+	this.findInterval = Math.floor((Math.random() * 20) + 1);
 	this.currentAnimation = 4;
 	this.currentFrame = 0;
 	this.frameCounter = 0;
 
+	this.staggerCounter = 0;
+	this.staggered = false;
+	this.health = 3;
+	this.staggerResist = 5; // Percentage
 }
 
 Monster.prototype.update = function(step, players, pathFinder, animations, sounds) {
@@ -29,27 +33,37 @@ Monster.prototype.update = function(step, players, pathFinder, animations, sound
 			this.setPath(pathFinder.findPath(this, players[c]));
 		}
 
-		if (this.path != null) {
+		if (this.path != null && !this.staggered) {
 			this.faceCurrentNode();
 			this.walkForwards(step);
 		}
+	} 
 
-		this.frameCounter++;
-		if (this.frameCounter > animations[this.currentAnimation].frames[this.currentFrame].length) {
-			this.frameCounter = 0;
-			this.currentFrame++;
-			if (this.currentFrame >= animations[this.currentAnimation].frames.length) {
-				if (animations[this.currentAnimation].looping) {
-					this.currentFrame = 0;
-				} else {
-					this.currentAnimation = 4;
-					this.currentFrame = 0;
-				}
+	this.randomMoan(sounds);
+	this.updateStagger();
+}
+
+Monster.prototype.updateAnimation = function() {
+	this.frameCounter++;
+	if (this.frameCounter > animations[this.currentAnimation].frames[this.currentFrame].length) {
+		this.frameCounter = 0;
+		this.currentFrame++;
+		if (this.currentFrame >= animations[this.currentAnimation].frames.length) {
+			if (animations[this.currentAnimation].looping) {
+				this.currentFrame = 0;
+			} else {
+				this.currentAnimation = 4;
+				this.currentFrame = 0;
 			}
 		}
 	}
+}
 
-	this.randomMoan(sounds);
+Monster.prototype.updateStagger = function() {
+	this.staggerCounter--;
+	if (this.staggerCounter < 0) {
+		this.staggered = false;
+	}
 }
 
 Monster.prototype.randomMoan = function(sounds) {
@@ -102,6 +116,21 @@ Monster.prototype.findClosestPlayer = function(players) {
 	}
 
 	return c;
+}
+
+Monster.prototype.takeDamage = function(damage, crit) {
+	if (Math.floor((Math.random() * 100) + 1) <= crit) {
+		this.health -= damage * 2;
+	} else {
+		this.health -= damage;
+	}
+
+	if (this.health <= 0) {
+		this.alive = false;
+	}
+
+	this.staggered = true;
+	this.staggerCounter = Math.floor((Math.random() * 90) + 1);
 }
 
 Monster.prototype.draw = function(context, spriteSheet, animations) {

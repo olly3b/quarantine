@@ -172,16 +172,16 @@ PathFinder.prototype.findAdjacentNodes = function() {
     temp.push(new Node(this.currentNode.x, this.currentNode.y + 1, 10, this.currentNode, this.destX, this.destY));
     temp.push(new Node(this.currentNode.x, this.currentNode.y - 1, 10, this.currentNode, this.destX, this.destY));
 
-    if (this.map[this.currentNode.y][this.currentNode.x + 1] != 3 && this.map[this.currentNode.y + 1][this.currentNode.x] != 3) {
+    if ((this.map[this.currentNode.y][this.currentNode.x + 1] != 3 || this.map[this.currentNode.y][this.currentNode.x + 1] != 2) && (this.map[this.currentNode.y + 1][this.currentNode.x] != 3 || this.map[this.currentNode.y + 1][this.currentNode.x] != 2)) {
         temp.push(new Node(this.currentNode.x + 1, this.currentNode.y + 1, 14, this.currentNode, this.destX, this.destY));
     }
-    if (this.map[this.currentNode.y][this.currentNode.x - 1] != 3 && this.map[this.currentNode.y - 1][this.currentNode.x] != 3) {
+    if ((this.map[this.currentNode.y][this.currentNode.x - 1] != 3 || this.map[this.currentNode.y][this.currentNode.x - 1] != 2) && (this.map[this.currentNode.y - 1][this.currentNode.x] != 3 || this.map[this.currentNode.y - 1][this.currentNode.x] != 2)) {
         temp.push(new Node(this.currentNode.x - 1, this.currentNode.y - 1, 14, this.currentNode, this.destX, this.destY));
     }
-    if (this.map[this.currentNode.y][this.currentNode.x - 1] != 3 && this.map[this.currentNode.y + 1][this.currentNode.x] != 3) {
+    if ((this.map[this.currentNode.y][this.currentNode.x - 1] != 3 || this.map[this.currentNode.y][this.currentNode.x - 1] != 2) && (this.map[this.currentNode.y + 1][this.currentNode.x] != 3 || this.map[this.currentNode.y + 1][this.currentNode.x] != 2)) {
         temp.push(new Node(this.currentNode.x - 1, this.currentNode.y + 1, 14, this.currentNode, this.destX, this.destY));
     }
-    if (this.map[this.currentNode.y][this.currentNode.x + 1] != 3 && this.map[this.currentNode.y - 1][this.currentNode.x] != 3) {
+    if ((this.map[this.currentNode.y][this.currentNode.x + 1] != 3 || this.map[this.currentNode.y][this.currentNode.x + 1] != 2) && (this.map[this.currentNode.y - 1][this.currentNode.x] != 3 || this.map[this.currentNode.y - 1][this.currentNode.x] != 2)) {
         temp.push(new Node(this.currentNode.x + 1, this.currentNode.y - 1, 14, this.currentNode, this.destX, this.destY));
     }
 

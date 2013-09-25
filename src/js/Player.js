@@ -23,6 +23,8 @@ function Player(x, y, player) {
 	this.equipped = new Item('weapon', 'pistol');
 	this.inventory = new Array();
 	this.inventory.push(new Item('ammo', 'pistol'));
+	this.inventory.push(new Item('ammo', 'pistol'));
+	this.inventory.push(new Item('ammo', 'pistol'));
 	this.ai = false;
 }
 
@@ -144,7 +146,7 @@ Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, pla
 			}	
 		}
 
-		if (this.ai && this.equipped.ammo > 0 && !this.fireDelay) {
+		if (this.ai && !this.fireDelay) {
 			if (this.AIShoot(monsters, map)) {
 				return true;
 			}
@@ -257,22 +259,42 @@ Player.prototype.canSeeMonster = function(monsters, map) {
 }
 
 Player.prototype.shoot = function() {	
-	if (!this.fireDelay) {
-		if (this.equipped.itemType == 'weapon') {
-			if (this.equipped.itemName == 'pistol') {
-				if (this.equipped.ammo > 0) {
-					this.fireDelay = true;
-					this.fireCounter = 0;
-					this.setAnimation(3);
-					this.equipped.ammo--;
-					return true;
+	if (this.equipped.ammo > 0) {
+		if (!this.fireDelay) {
+			if (this.equipped.itemType == 'weapon') {
+				if (this.equipped.itemName == 'pistol') {
+					if (this.equipped.ammo > 0) {
+						this.fireDelay = true;
+						this.fireCounter = 0;
+						this.setAnimation(3);
+						this.equipped.ammo--;
+						return true;
+					}
 				}
 			}
 		}
+	} else {
+		var flag = false;
+		for (var i = 0; i < this.inventory.length; i++) {
+			if (this.inventory[i].itemType == 'ammo') {
+				if (this.inventory[i].itemName == this.equipped.itemName) {
+					this.inventory[i].ammo -= this.equipped.clipSize;
+					if (this.inventory[i].ammo <= 0) {
+						this.inventory[i] = null;
+					}
+					this.equipped.ammo = this.equipped.clipSize;
+					this.setAnimation(2); //Change to new reloading animation
+					return false;
+				}
+			}
+		}
+		if (flag) {
+			// reload
+		} else {
+			this.setAnimation(2);
+			return false
+		}
 	}
-
-	this.setAnimation(2);
-	return false
 }
 
 Player.prototype.findClosestMonster = function(monsters) {
