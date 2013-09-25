@@ -69,8 +69,8 @@ window.Game = {};
     animations.push(new Animation(true)); // Player aiming // 2
     animations[animations.length - 1].addFrame(96, 0, 32, 32, 1);
     animations.push(new Animation(false)); // Player shooting // 3
-    animations[animations.length - 1].addFrame(128, 0, 32, 32, 10);    
-    animations[animations.length - 1].addFrame(96, 0, 32, 32, 20);
+    animations[animations.length - 1].addFrame(128, 0, 32, 32, 20);    
+    animations[animations.length - 1].addFrame(96, 0, 32, 32, 30);
     animations.push(new Animation(true)); // Monster standing // 4
     animations[animations.length - 1].addFrame(0, 96, 32, 32, 1);
     animations.push(new Animation(true)); // Monster walking  // 5
@@ -154,9 +154,8 @@ window.Game = {};
     var updateBullets = function() {
         if (bullets.length != 0) {
             for (var i = 0; i < bullets.length; i++) {
-                bullets[i].update(monsters, STEP, map);
-                if (bullets[i].alive == false) {
-                    bullets.splice(i, 1);
+                if (bullets[i].update(monsters, STEP, map)) {
+                    buttons.splice(i, 1);
                 }
             }
         }
@@ -246,12 +245,12 @@ window.Game = {};
     var drawCursor = function() {
         if (cursorItem != null) {
             drawContext.fillStyle = '#000000';
-            drawContext.drawImage(spriteSheet, cursorItem.imageX, cursorItem.imageY, 32, 32, controls.mouseX - 16, controls.mouseY - 16, 32, 32);            
+            drawContext.drawImage(spriteSheet, cursorItem.imageX, cursorItem.imageY, 32, 32, controls.mouseX - 16, controls.mouseY - 16, 32, 32);                    
             drawContext.fillText(cursorItem.ammo, controls.mouseX - 1, controls.mouseY + 14);
         } else {
             drawContext.strokeStyle = '#FF0000';
             drawContext.beginPath();
-            drawContext.arc(controls.mouseX, controls.mouseY, 5, 0, Math.PI * 2, false);
+            drawContext.arc(controls.mouseX + 6, controls.mouseY + 6, 16, 0, Math.PI * 2, false);
             drawContext.closePath();
             drawContext.stroke();
         }
@@ -494,17 +493,19 @@ window.Game = {};
                         }
                     }
                 } else {
-                    if (mainViewport.focus.inventory[i].itemType == 'ammo') {
-                        if (mainViewport.focus.inventory[i].ammo > mainViewport.focus.inventory[i].clipSize) {
-                            mainViewport.focus.inventory[i].ammo -= mainViewport.focus.inventory[i].clipSize;
-                            cursorItem = new Item('ammo', mainViewport.focus.inventory[i].itemName);
+                    if (mainViewport.focus.inventory[i] != null) {
+                        if (mainViewport.focus.inventory[i].itemType == 'ammo') {
+                            if (mainViewport.focus.inventory[i].ammo > mainViewport.focus.inventory[i].clipSize) {
+                                mainViewport.focus.inventory[i].ammo -= mainViewport.focus.inventory[i].clipSize;
+                                cursorItem = new Item('ammo', mainViewport.focus.inventory[i].itemName);
+                            } else {
+                                cursorItem = mainViewport.focus.inventory[i];
+                                mainViewport.focus.inventory[i] = null;
+                            }
                         } else {
                             cursorItem = mainViewport.focus.inventory[i];
                             mainViewport.focus.inventory[i] = null;
                         }
-                    } else {
-                        cursorItem = mainViewport.focus.inventory[i];
-                        mainViewport.focus.inventory[i] = null;
                     }
                 }
             }      

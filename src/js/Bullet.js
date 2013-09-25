@@ -7,23 +7,28 @@ function Bullet(player, vx, vy) {
 	this.alive = true;
 	this.size = 1;
 	this.damage = 1;
-	this.crit = 10; // Percentage
+	this.crit = 20; // Percentage
 	this.stagger = 75; // Percentage
 }
 
 Bullet.prototype.update = function(monsters, step, map) {
-	if (this.alive) {
-		this.checkBoundaries(map);
+	if (this.isAlive()) {
 		this.move(step);
-		this.checkCollisionWithMonster(monsters);
-		this.checkCollisionWithMap(map);		
+		if (this.checkCollisionWithMonster(monsters) || this.checkCollisionWithMap(map)) { return true; }
+		if (this.isBoundaryReached(map)) { this.killBullet(); }
 	}
+
+	return false;
+}
+
+Bullet.prototype.isAlive = function() {
+	return this.alive;
 }
 
 Bullet.prototype.checkCollisionWithMonster = function(monsters) {
 	for (var m = 0; m < monsters.length; m++) {
-		if (this.x > monsters[m].x && this.x < monsters[m].x + monsters[m].width) {
-			if (this.y > monsters[m].y && this.y < monsters[m].y + monsters[m].height) {
+		if (this.isIntersectObject(monsters[m])) {
+			if (this.isAlive()) {
 				monsters[m].takeDamage(this.damage, this.crit);
 				this.killBullet();
 			}
@@ -31,19 +36,40 @@ Bullet.prototype.checkCollisionWithMonster = function(monsters) {
 	}
 }
 
+Bullet.prototype.isIntersectObject = function(thing) {
+	if (this.x > thing.x && this.x < thing.x + thing.width) {
+		if (this.y > thing.y && this.y < thing.y + thing.height) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+Bullet.prototype.isIntersect = function(x, y, w, h) {
+	if (this.x > x && this.x < x + w) {
+		if (this.y > y && this.y < y + h) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+Bullet.prototype.killBullet = function() {
+	this.alive = false;
+}
+
 Bullet.prototype.checkCollisionWithMap = function(map) {
 	for(var ay = 0; ay < map.dynamicMap.length ; ay++) {
 		for(var ax = 0; ax < map.dynamicMap[ay].length; ax++) {
-		 		
-	 		var tile = map.dynamicMap[ay][ax];
-
-	 		switch(tile) {		 			
+	 		switch(map.dynamicMap[ay][ax]) {		 			
 	 			case 3:	
-	 				if (this.x > ax * 32 && this.x < (ax * 32) + 32) {
-	 					if (this.y > ay * 32 && this.y < (ay * 32) + 32) {
-	 						this.alive = false;
-	 					}		 								 					
-	 				}	 			
+	 				if (this.isIntersect(ax * 32, ay * 32, 32, 32)) {
+	 					this.killBullet();
+	 				}
+	 							
 		 			break;
 		 	}
 		}
@@ -56,18 +82,16 @@ Bullet.prototype.move = function(step) {
 }
 
 Bullet.prototype.draw = function(context, map) {
-	if (this.alive) {
+	if (this.isAlive()) {
 		context.fillStyle = '#000000';
     	context.fillRect(this.x, this.y, this.size, this.size);
 	}	
 }
 
-Bullet.prototype.checkBoundaries = function(map) {
+Bullet.prototype.isBoundaryReached = function(map) {
 	if (this.x < 0 || this.y < 0 || this.x > map.sizeX || this.y > map.sizeY) {
-		this.killBullet();
+		return true;
 	}
-}
 
-Bullet.prototype.killBullet = function() {
-	this.alive = false;
+	return false;
 }
