@@ -90,8 +90,8 @@ window.Game = {};
     zombieSounds.push(new Audio('sound/zombie5.mp3'));
 
 	spawners.push(new Spawner(1, 1));
-	//spawners.push(new Spawner(1, 2));
-	//spawners.push(new Spawner(1, 27));
+	spawners.push(new Spawner(1, 2));
+	spawners.push(new Spawner(1, 27));
 	spawners.push(new Spawner(1, 28));
 
     var debugOn = false;
@@ -108,9 +108,9 @@ window.Game = {};
     }
 
     Game.initialiseGame = function() {
-        players.push(new Player (416, 616, 0));
-        players.push(new Player (416, 584, 1));
-        players.push(new Player (416, 552, 2));
+        players.push(new Player ('Zara', 416, 616, 0));
+        players.push(new Player ('Lila', 416, 584, 1));
+        players.push(new Player ('Nico', 416, 552, 2));
 
         mainViewport.focus = players[0];
         players[0].focus = true;

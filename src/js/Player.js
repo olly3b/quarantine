@@ -1,4 +1,5 @@
-function Player(x, y, player) {
+function Player(name, x, y, player) {
+	this.name = name;
 	this.x = x;
 	this.y = y;
 	this.player = player;
@@ -121,6 +122,10 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 		 	}
 		}
 	}
+
+	if (this.fireDelay) {
+		this.setAnimation(2);
+	}
 	
 	return b;
 }
@@ -134,16 +139,19 @@ Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, pla
 				for (var p = 0; p < this.currentViewPort; p++) {
 					this.path.pop(this.path.length - 1);
 				}
-
 				this.faceCurrentNode();
 				this.walkForwards(step);
 			} else {
 				if (this.fireDelay) {
 					this.setAnimation(2);
-				} else {
-					this.setAnimation(0);
-				}
+				} 
 			}	
+		} else {
+			if (this.fireDelay) {
+				this.setAnimation(2);
+			} else {
+				this.setAnimation(0);
+			}
 		}
 
 		if (this.ai && !this.fireDelay) {
@@ -274,25 +282,29 @@ Player.prototype.shoot = function() {
 			}
 		}
 	} else {
-		var flag = false;
-		for (var i = 0; i < this.inventory.length; i++) {
-			if (this.inventory[i].itemType == 'ammo') {
-				if (this.inventory[i].itemName == this.equipped.itemName) {
-					this.inventory[i].ammo -= this.equipped.clipSize;
-					if (this.inventory[i].ammo <= 0) {
-						this.inventory[i] = null;
+		if (!this.focus) {
+			var flag = false;
+			for (var i = 0; i < this.inventory.length; i++) {
+				if (this.inventory[i] != null) {
+					if (this.inventory[i].itemType == 'ammo') {
+						if (this.inventory[i].itemName == this.equipped.itemName) {
+							this.equipped.ammo = this.inventory[i].ammo;
+							this.inventory[i].ammo -= this.equipped.clipSize;
+							if (this.inventory[i].ammo <= 0) {
+								this.inventory[i] = null;
+							}					
+							this.setAnimation(2); //Change to new reloading animation
+							return false;
+						}
 					}
-					this.equipped.ammo = this.equipped.clipSize;
-					this.setAnimation(2); //Change to new reloading animation
-					return false;
 				}
 			}
-		}
-		if (flag) {
-			// reload
-		} else {
-			this.setAnimation(2);
-			return false
+			if (flag) {
+				// reload
+			} else {
+				this.setAnimation(2);
+				return false
+			}
 		}
 	}
 }
