@@ -73,6 +73,7 @@ window.Game = {};
     	updateBullets();
     	updateSpawners();	
         updateButtons();
+        updateItems();
     }
 
     Game.initialiseGame = function() {
@@ -95,6 +96,15 @@ window.Game = {};
         animations.push(new Animation(true)); // Monster walking  // 5
         animations[animations.length - 1].addFrame(32, 96, 32, 32, 7);
         animations[animations.length - 1].addFrame(64, 96, 32, 32, 7);
+        animations.push(new Animation(false)); // Monster shot //6
+        animations[animations.length - 1].addFrame(96, 96, 32, 32, 5);
+        animations[animations.length - 1].addFrame(128, 96, 32, 32, 5);
+        animations[animations.length - 1].addFrame(160, 96, 32, 32, 5);
+        animations[animations.length - 1].addFrame(128, 96, 32, 32, 5);
+        animations.push(new Animation(false)); // Monster crit hit //7
+        animations[animations.length - 1].addFrame(160, 96, 32, 32, 5);
+        animations[animations.length - 1].addFrame(192, 96, 32, 32, 5);
+        animations[animations.length - 1].addFrame(224, 96, 32, 32, 5);
 
         gunSound.push(new Audio('sound/pistol.mp3'));
         gunSound.push(new Audio('sound/pistol.mp3'));
@@ -107,8 +117,8 @@ window.Game = {};
         zombieSounds.push(new Audio('sound/zombie5.mp3'));
 
         spawners.push(new Spawner(1, 1));
-        spawners.push(new Spawner(1, 2));
-        spawners.push(new Spawner(1, 27));
+        //spawners.push(new Spawner(1, 2));
+        //spawners.push(new Spawner(1, 27));
         spawners.push(new Spawner(1, 28));
 
         mainViewport.focus = players[0];
@@ -171,6 +181,12 @@ window.Game = {};
     var updateButtons = function() {
         for (var b = 0; b < Game.buttons.length; b++) {
             Game.buttons[b].update(controls.mouseX, controls.mouseY);
+        }
+    }
+
+    var updateItems = function() {
+        for (var i = 0; i < map.items.length; i++) {
+            map.items[i].update();
         }
     }
 
@@ -427,7 +443,7 @@ window.Game = {};
     		playerViewPortOne.focus = temp;
     		playerViewPortOne.focus.follow = false;
     		playerViewPortTwo.focus.follow = false;
-            Game.buttons[0].on = playerViewPortOne.focus.follow;
+            Game.buttons[0].on = false;;
             Game.buttons[2].on = playerViewPortOne.focus.ai;
     	}
 
@@ -441,7 +457,7 @@ window.Game = {};
     		playerViewPortTwo.focus = temp;
     		playerViewPortOne.focus.follow = false;
     		playerViewPortTwo.focus.follow = false;
-            Game.buttons[1].on = playerViewPortTwo.focus.follow;
+            Game.buttons[1].on = false;;
             Game.buttons[3].on = playerViewPortTwo.focus.ai;
     	}    	
     }
@@ -469,7 +485,8 @@ window.Game = {};
                 }
             }
         }
-        
+            
+        // Handling ammo in inventory
         for (var i = 0; i < 6; i++) {
             if (controls.mouseX > invX[i] && controls.mouseX < invX[i] + 32 && controls.mouseY > invY[i] && controls.mouseY < invY[i] + 32) {
                 if (cursorItem != null) {
@@ -508,6 +525,7 @@ window.Game = {};
             }      
         }
 
+        // Dropping ammo on equipped item
         if (controls.mouseX > 10 && controls.mouseX < 74 && controls.mouseY > 491 && controls.mouseY < 555) {
             if (cursorItem.itemType == 'ammo' && mainViewport.focus.equipped.itemType == 'weapon') {
                 if (cursorItem.itemName == 'pistol' && mainViewport.focus.equipped.itemName == 'pistol') {
@@ -524,13 +542,39 @@ window.Game = {};
             }
         }
 
+        // Droppingitems
         if (controls.mouseX > mainViewport.posX && controls.mouseX < mainViewport.posX + mainViewport.width) {
             if (controls.mouseY > mainViewport.posY && controls.mouseY < mainViewport.posY + mainViewport.height) {
-                map.items.push(new Item(cursorItem.itemType, cursorItem.itemName));
-                map.items[map.items.length - 1].ammp = cursorItem.ammo;
-                map.items[map.items.length - 1].x = mainViewport.focus.x;
-                map.items[map.items.length - 1].y = mainViewport.focus.y;
-                cursorItem = null;
+                if (cursorItem != null) {
+                    //map.items.push(new Item(cursorItem.itemType, cursorItem.itemName));
+                    map.items.push(cursorItem);
+                    map.items[map.items.length - 1].ammp = cursorItem.ammo;
+                    map.items[map.items.length - 1].x = mainViewport.focus.x;
+                    map.items[map.items.length - 1].y = mainViewport.focus.y;
+                    map.items[map.items.length - 1].vX = Math.cos(mainViewport.focus.angle + 1.57079633) * STEP * 200;
+                    map.items[map.items.length - 1].vY = Math.sin(mainViewport.focus.angle + 1.57079633) * STEP * 200;
+                    map.items[map.items.length - 1].throwCounter = 5;
+                    cursorItem = null;
+                } else {
+                    // Picking up items
+                    for (var i = 0; i < map.items.length; i++) {
+                        if (controls.mouseX > map.items[i].x - mainViewport.x && controls.mouseX < map.items[i].x - mainViewport.x + map.items[i].width) {
+                            if (controls.mouseY > map.items[i].y - mainViewport.y && controls.mouseY < map.items[i].y - mainViewport.y + map.items[i].height) {
+                                
+                                var hX = (map.items[i].x - mainViewport.focus.x);
+                                if (hX < 0) { hX = -hX; }
+
+                                var hY = (map.items[i].y - mainViewport.focus.y);
+                                if (hY < 0) { hY = -hY; }
+
+                                if (hX + hY < 60) {
+                                    cursorItem = map.items[i];
+                                    map.items.splice(i, 1);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

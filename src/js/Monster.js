@@ -227,8 +227,10 @@ Monster.prototype.getManhattanValue = function(x, y) {
 Monster.prototype.takeDamage = function(damage, crit) {
 	if (this.isCrit(crit)) {
 		this.critHit(damage);
+		this.setAnimation(7);
 	} else {
 		this.normalHit(damage);
+		this.setAnimation(6);
 	}
 
 	if (this.isHealth0()) { this.die(); }

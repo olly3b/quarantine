@@ -482,12 +482,14 @@ Player.prototype.setAnimation = function(animation) {
 	if (animation != this.currentAnimation) {
 		this.currentAnimation = animation;
 		this.currentFrame = 0;
+		this.frameCounter = 0;
 	}
 }
 
 Player.prototype.forceSetAnimation = function(animation) {
 	this.currentAnimation = animation;
 	this.currentFrame = 0;
+	this.frameCounter = 0;
 }
 
 Player.prototype.setNewPath = function(path) {

@@ -16,6 +16,9 @@ function Item(itemType, itemName) {
 	this.width = 32;
 	this.height = 32;
 	this.angle = 0;
+	this.throwCounter = 0;
+	this.vX = 0;
+	this.vY = 0;
 
 	this.initialise();
 }
@@ -42,6 +45,14 @@ Item.prototype.initialise = function() {
 			this.imageX = 32;
 			this.imageY = 128;			
 		}
+	}
+}
+
+Item.prototype.update = function() {
+	if (this.throwCounter > 0) {
+		this.x += this.vX;
+		this.y += this.vY;
+		this.throwCounter--;
 	}
 }
 
