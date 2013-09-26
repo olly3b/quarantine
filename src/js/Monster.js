@@ -32,9 +32,9 @@ Monster.prototype.update = function(step, players, pathFinder, animations, sound
 		this.updatePath(players, pathFinder);
 		this.move(step);
 		this.updateStagger();
-		this.updateAnimation(animations);
 		if (this.isRandomMoan()) { this.randomMoan(sounds); }
 	} 
+	this.updateAnimation(animations);
 }
 
 Monster.prototype.isAlive = function() {
@@ -76,8 +76,13 @@ Monster.prototype.updateAnimation = function(animations) {
 			if (this.isCurrentAnimationLooping(animations)) {
 				this.resetCurrentFrame();
 			} else {
-				this.setAnimation(4);
-				this.resetCurrentFrame;
+				if (this.isAlive()) {
+					this.setAnimation(4);
+					this.resetCurrentFrame();
+				} else {
+					this.resetFrameCounter();
+					this.currentFrame = animations[this.currentAnimation].frames.length -1;
+				}
 			}
 		}
 	}
@@ -228,12 +233,18 @@ Monster.prototype.takeDamage = function(damage, crit) {
 	if (this.isCrit(crit)) {
 		this.critHit(damage);
 		this.setAnimation(7);
+		if (this.isHealth0()) { 
+			this.die(); 
+			this.setAnimation(9);
+		}	
 	} else {
 		this.normalHit(damage);
 		this.setAnimation(6);
+		if (this.isHealth0()) { 
+			this.die(); 
+			this.setAnimation(8);
+		}
 	}
-
-	if (this.isHealth0()) { this.die(); }
 	this.stagger();	
 }
 
@@ -255,6 +266,7 @@ Monster.prototype.isHealth0 = function() {
 
 Monster.prototype.die = function() {
 	this.alive = false;
+	this.setAnimation(8);
 }
 
 Monster.prototype.stagger = function() {
@@ -276,16 +288,24 @@ Monster.prototype.setAnimation = function(animation) {
 	if (animation != this.currentAnimation) {
 		this.currentAnimation = animation;
 		this.currentFrame = 0;
+		this.frameCounter = 0;
 	}
 }
 
 Monster.prototype.draw = function(context, spriteSheet, animations) {
-	if (this.isAlive()) {
+	//if (this.isAlive()) {
 		context.save();
 		context.translate(this.x, this.y);
 		context.translate(this.width / 2, this.height / 2);
 		context.rotate(this.angle); 	
 		context.drawImage(spriteSheet, animations[this.currentAnimation].frames[this.currentFrame].imgX, animations[this.currentAnimation].frames[this.currentFrame].imgY, animations[this.currentAnimation].frames[this.currentFrame].width, animations[this.currentAnimation].frames[this.currentFrame].height, -this.width / 2, -this.height / 2, 32, 32);	
 		context.restore();
-	}
+	// } else {
+	// 	context.save();
+	// 	context.translate(this.x, this.y);
+	// 	context.translate(this.width / 2, this.height / 2);
+	// 	context.rotate(this.angle); 	
+	// 	context.drawImage(spriteSheet, 288, 96, animations[this.currentAnimation].frames[this.currentFrame].width, animations[this.currentAnimation].frames[this.currentFrame].height, -this.width / 2, -this.height / 2, 32, 32);	
+	// 	context.restore();
+	// }
 }

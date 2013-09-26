@@ -28,7 +28,7 @@ Bullet.prototype.isAlive = function() {
 Bullet.prototype.checkCollisionWithMonster = function(monsters) {
 	for (var m = 0; m < monsters.length; m++) {
 		if (this.isIntersectObject(monsters[m])) {
-			if (this.isAlive()) {
+			if (this.isAlive() && monsters[m].isAlive()) {
 				monsters[m].takeDamage(this.damage, this.crit);
 				this.killBullet();
 			}

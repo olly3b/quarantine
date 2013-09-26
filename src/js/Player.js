@@ -385,8 +385,10 @@ Player.prototype.findClosestMonster = function(monsters) {
 
 	for (var m = 0;  m< monsters.length; m++) {
 		if (this.isMonsterClosest(monsters[m], lowest)) {
-			lowest = this.getManhattanValue(monsters[m].x, monsters[m].y);
-			closestMonster = m;
+			if (monsters[m].isAlive()) {
+				lowest = this.getManhattanValue(monsters[m].x, monsters[m].y);
+				closestMonster = m;
+			}
 		}
 	}
 

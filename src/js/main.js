@@ -96,15 +96,24 @@ window.Game = {};
         animations.push(new Animation(true)); // Monster walking  // 5
         animations[animations.length - 1].addFrame(32, 96, 32, 32, 7);
         animations[animations.length - 1].addFrame(64, 96, 32, 32, 7);
-        animations.push(new Animation(false)); // Monster shot //6
+        animations.push(new Animation(false)); // Monster shot // 6
         animations[animations.length - 1].addFrame(96, 96, 32, 32, 5);
         animations[animations.length - 1].addFrame(128, 96, 32, 32, 5);
         animations[animations.length - 1].addFrame(160, 96, 32, 32, 5);
         animations[animations.length - 1].addFrame(128, 96, 32, 32, 5);
         animations.push(new Animation(false)); // Monster crit hit //7
-        animations[animations.length - 1].addFrame(160, 96, 32, 32, 5);
         animations[animations.length - 1].addFrame(192, 96, 32, 32, 5);
         animations[animations.length - 1].addFrame(224, 96, 32, 32, 5);
+        animations[animations.length - 1].addFrame(256, 96, 32, 32, 5);
+        animations.push(new Animation(false)); // Monster death // 8
+        animations[animations.length - 1].addFrame(288, 96, 32, 32, 30);
+        animations[animations.length - 1].addFrame(320, 96, 32, 32, 1);
+        animations.push(new Animation(false)); // Monster crit death // 9
+        animations[animations.length - 1].addFrame(352, 96, 32, 32, 10);
+        animations[animations.length - 1].addFrame(384, 96, 32, 32, 10);
+        animations[animations.length - 1].addFrame(416, 96, 32, 32, 10);
+        animations[animations.length - 1].addFrame(448, 96, 32, 32, 15);
+        animations[animations.length - 1].addFrame(480, 96, 32, 32, 1);
 
         gunSound.push(new Audio('sound/pistol.mp3'));
         gunSound.push(new Audio('sound/pistol.mp3'));
@@ -153,9 +162,9 @@ window.Game = {};
         if (monsters.length != 0) {
             for (var m = 0; m < monsters.length; m++) {
                 monsters[m].update(STEP, players, pathFinder, animations, zombieSounds);
-                if (monsters[m].alive == false) {
-                    monsters.splice(m, 1);
-                }
+                //if (monsters[m].alive == false) {
+                    //monsters.splice(m, 1);
+                //}
             }
         }
     }
