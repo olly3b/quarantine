@@ -19,6 +19,9 @@ function Player(name, x, y, player) {
 	this.focus = false;
 	this.ai = false;
 
+	this.reloadDelay = false;
+	this.reloadCounter = 0;
+	this.reloadRate = 45;
 	this.fireDelay = false;
 	this.fireCounter = 0;
 	this.fireRate = 50;
@@ -40,21 +43,21 @@ Player.prototype.controlUpdate = function(step, viewport, map) {
 	var oldX = this.x;
 	var oldY = this.y;
 
-	if (!controls.left && !controls.right && !controls.up && !controls.down && !this.fireDelay) {
+	if (!controls.left && !controls.right && !controls.up && !controls.down && !this.fireDelay && !this.reloadDelay) {
 		this.setAnimation(0);
 	}
 
 	var newBullet = false;
 
-	if (!this.fireDelay) {
+	if (!this.fireDelay && !this.reloadDelay) {
 		if (this.isFirePressed()) { newBullet = this.shoot(); }
+
+		this.horizontalInputUpdate(step);
+		this.checkHorizontalCollision(map, oldX);
+
+		this.verticalInputUpdate(step);
+		this.checkVerticalCollision(map, oldY);
 	}
-
-	this.horizontalInputUpdate(step);
-	this.checkHorizontalCollision(map, oldX);
-
-	this.verticalInputUpdate(step);
-	this.checkVerticalCollision(map, oldY);
 	
 	return newBullet;
 }
@@ -150,34 +153,29 @@ Player.prototype.checkVerticalCollision = function(map, oldY) {
 
 Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, player, animations, map) {
 	if (!this.isMainFocus()) {		
-		if (this.isFollowing()) {
+		if (this.isFollowing() && !this.reloadDelay) {
 			this.setNewPath(pathFinder.findPath(this, mainViewPort.focus));				
-
 			if (this.path != null && !this.fireDelay) {
 				this.trimPath();
 				this.faceCurrentNode();	
 				this.walkForwards(step);
-			} else {
-				if (this.fireDelay) {
-					this.setAnimation(2);
-				} 
-			}	
-		} else {
-			if (this.fireDelay) {
-				this.setAnimation(2);
-			} else {
-				this.setAnimation(0);
-			}
+			} 
+		} 
+		if (this.fireDelay) {
+			this.setAnimation(2);
 		}
 
-		if (this.isAIOn() && !this.fireDelay) {
+		if (this.isAIOn() && !this.fireDelay && !this.reloadDelay) {
 			if (this.AIShoot(monsters, map)) {
 				return true;
 			}
 		}
 	}
 
-	this.updateShotStun();
+	if (!this.reloadDelay) {
+		this.updateShotStun();
+	}
+	this.updateReloadStun();
 	this.updateAnimation(animations);
 }
 
@@ -200,6 +198,30 @@ Player.prototype.updateShotStun = function() {
 	if (this.isShotStunFinished()) {		
 		this.endShotStun();
 	}
+}
+
+Player.prototype.updateReloadStun = function() {
+	this.increaseReloadStunCounter();
+	if (this.isReloadStunFinished()) {
+		this.endReloadStun();
+	}
+}
+
+Player.prototype.startReloadStun = function() {
+	this.reloadDelay = true
+	this.reloadCounter = 0;
+}
+
+Player.prototype.increaseReloadStunCounter = function() {
+	this.reloadCounter++;
+}
+
+Player.prototype.isReloadStunFinished = function() {
+	return this.reloadCounter >= this.reloadRate;
+}
+
+Player.prototype.endReloadStun = function() {
+	this.reloadDelay = false;
 }
 
 Player.prototype.increaseShotStunCounter = function() {
@@ -300,7 +322,8 @@ Player.prototype.AIReload = function() {
 					if (this.inventory[i].ammo <= 0) {
 						this.inventory[i] = null;
 					}					
-					//this.setAnimation(2); //Change to new reloading animation
+					this.startReloadStun();
+					this.setAnimation(10);
 					return false;
 				}
 			}
@@ -456,7 +479,9 @@ Player.prototype.walkForwards = function(step) {
 				this.clearPath();
 			}
 		} 
-	}	
+	} else {
+		this.setAnimation(0);
+	}
 }
 
 Player.prototype.setNewPosition = function(step) {
@@ -473,7 +498,7 @@ Player.prototype.increaseCurrentNode = function() {
 }
 
 Player.prototype.isPathFinished = function() {
-	return this.currentNode > this.path.length - 1;
+	return this.currentNode == this.path[this.path.length - 1];
 }
 
 Player.prototype.clearPath = function() {

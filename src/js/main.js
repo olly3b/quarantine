@@ -97,14 +97,14 @@ window.Game = {};
         animations[animations.length - 1].addFrame(32, 96, 32, 32, 7);
         animations[animations.length - 1].addFrame(64, 96, 32, 32, 7);
         animations.push(new Animation(false)); // Monster shot // 6
-        animations[animations.length - 1].addFrame(96, 96, 32, 32, 5);
-        animations[animations.length - 1].addFrame(128, 96, 32, 32, 5);
-        animations[animations.length - 1].addFrame(160, 96, 32, 32, 5);
-        animations[animations.length - 1].addFrame(128, 96, 32, 32, 5);
+        animations[animations.length - 1].addFrame(96, 96, 32, 32, 3);
+        animations[animations.length - 1].addFrame(128, 96, 32, 32, 3);
+        animations[animations.length - 1].addFrame(160, 96, 32, 32, 3);
+        animations[animations.length - 1].addFrame(128, 96, 32, 32, 3);
         animations.push(new Animation(false)); // Monster crit hit //7
-        animations[animations.length - 1].addFrame(192, 96, 32, 32, 5);
-        animations[animations.length - 1].addFrame(224, 96, 32, 32, 5);
-        animations[animations.length - 1].addFrame(256, 96, 32, 32, 5);
+        animations[animations.length - 1].addFrame(192, 96, 32, 32, 3);
+        animations[animations.length - 1].addFrame(224, 96, 32, 32, 3);
+        animations[animations.length - 1].addFrame(256, 96, 32, 32, 3);
         animations.push(new Animation(false)); // Monster death // 8
         animations[animations.length - 1].addFrame(288, 96, 32, 32, 30);
         animations[animations.length - 1].addFrame(320, 96, 32, 32, 1);
@@ -114,6 +114,10 @@ window.Game = {};
         animations[animations.length - 1].addFrame(416, 96, 32, 32, 10);
         animations[animations.length - 1].addFrame(448, 96, 32, 32, 15);
         animations[animations.length - 1].addFrame(480, 96, 32, 32, 1);
+        animations.push(new Animation(false)); // Player reloading // 10
+        animations[animations.length - 1].addFrame(160, 0, 32, 32, 15);
+        animations[animations.length - 1].addFrame(192, 0, 32, 32, 15);
+        animations[animations.length - 1].addFrame(224, 0, 32, 32, 15);
 
         gunSound.push(new Audio('sound/pistol.mp3'));
         gunSound.push(new Audio('sound/pistol.mp3'));
@@ -204,8 +208,8 @@ window.Game = {};
         clearCanvas();        
       	map.draw(context);
         drawItems();
-        drawPlayers();
         drawMonsters();
+        drawPlayers();
         drawBullets();
         drawInterface();
         drawViewPorts();
@@ -362,6 +366,24 @@ window.Game = {};
                 drawContext.fillText(playerViewPortTwo.focus.equipped.ammo, 900, 439);
             }
         }
+
+        // Main viewport player health
+        drawContext.strokeStyle = '#FFFFFF';
+        drawContext.strokeRect(180, 490, 32, 102);
+        drawContext.fillStyle = '#FF0000';
+        drawContext.fillRect(181, 591, 30, -mainViewport.focus.health);
+
+        // Viewport one player health
+        drawContext.strokeStyle = '#FFFFFF';
+        drawContext.strokeRect(871, 35, 32, 102);
+        drawContext.fillStyle = '#FF0000';
+        drawContext.fillRect(872, 136, 30, -playerViewPortOne.focus.health);
+
+        // Viewport two player health
+        drawContext.strokeStyle = '#FFFFFF';
+        drawContext.strokeRect(871, 275, 32, 102);
+        drawContext.fillStyle = '#FF0000';
+        drawContext.fillRect(872, 376, 30, -playerViewPortTwo.focus.health);
     }
 
     var drawDebug = function() {
@@ -542,16 +564,21 @@ window.Game = {};
                     if (cursorItem.ammo > t) {
                         cursorItem.ammo -= t;
                         mainViewport.focus.equipped.ammo += t;
+                        mainViewport.focus.startReloadStun();
+                        mainViewport.focus.setAnimation(10);
+                        var derp = 0;
                     } else {
                         mainViewport.focus.equipped.ammo += cursorItem.ammo;
                         cursorItem = null;
+                        mainViewport.focus.startReloadStun();
+                        mainViewport.focus.setAnimation(10);
                     }                
                 }
 
             }
         }
 
-        // Droppingitems
+        // Dropping items
         if (controls.mouseX > mainViewport.posX && controls.mouseX < mainViewport.posX + mainViewport.width) {
             if (controls.mouseY > mainViewport.posY && controls.mouseY < mainViewport.posY + mainViewport.height) {
                 if (cursorItem != null) {
