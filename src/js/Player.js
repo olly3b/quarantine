@@ -35,31 +35,36 @@ function Player(name, x, y, player) {
 	this.inventory = new Array();
 	this.inventory.push(new Item('ammo', 'pistol'));
 	this.inventory.push(new Item('ammo', 'pistol'));
+
+	this.isAttacked = false;
+	this.isAlive = true;
 }
 
 Player.prototype.controlUpdate = function(step, viewport, map) {
-	this.lookAtMouse(viewport);
+	if (!this.isAttacked && this.isAlive) {
+		this.lookAtMouse(viewport);
 
-	var oldX = this.x;
-	var oldY = this.y;
+		var oldX = this.x;
+		var oldY = this.y;
 
-	if (!controls.left && !controls.right && !controls.up && !controls.down && !this.fireDelay && !this.reloadDelay) {
-		this.setAnimation(0);
+		if (!controls.left && !controls.right && !controls.up && !controls.down && !this.fireDelay && !this.reloadDelay) {
+			this.setAnimation(0);
+		}
+
+		var newBullet = false;
+
+		if (!this.fireDelay && !this.reloadDelay) {
+			if (this.isFirePressed()) { newBullet = this.shoot(); }
+
+			this.horizontalInputUpdate(step);
+			this.checkHorizontalCollision(map, oldX);
+
+			this.verticalInputUpdate(step);
+			this.checkVerticalCollision(map, oldY);
+		}
+		
+		return newBullet;
 	}
-
-	var newBullet = false;
-
-	if (!this.fireDelay && !this.reloadDelay) {
-		if (this.isFirePressed()) { newBullet = this.shoot(); }
-
-		this.horizontalInputUpdate(step);
-		this.checkHorizontalCollision(map, oldX);
-
-		this.verticalInputUpdate(step);
-		this.checkVerticalCollision(map, oldY);
-	}
-	
-	return newBullet;
 }
 
 Player.prototype.lookAtMouse = function(viewport) {
@@ -152,31 +157,37 @@ Player.prototype.checkVerticalCollision = function(map, oldY) {
 }
 
 Player.prototype.update = function(step, mainViewPort, pathFinder, monsters, player, animations, map) {
-	if (!this.isMainFocus()) {		
-		if (this.isFollowing() && !this.reloadDelay) {
-			this.setNewPath(pathFinder.findPath(this, mainViewPort.focus));				
-			if (this.path != null && !this.fireDelay) {
-				this.trimPath();
-				this.faceCurrentNode();	
-				this.walkForwards(step);
+	if (!this.isAttacked && this.isAlive) {
+		if (!this.isMainFocus()) {		
+			if (this.isFollowing() && !this.reloadDelay) {
+				this.setNewPath(pathFinder.findPath(this, mainViewPort.focus));				
+				if (this.path != null && !this.fireDelay) {
+					this.trimPath();
+					this.faceCurrentNode();	
+					this.walkForwards(step);
+				} 
 			} 
-		} 
-		if (this.fireDelay) {
-			this.setAnimation(2);
-		}
+			if (this.fireDelay) {
+				this.setAnimation(2);
+			}
 
-		if (this.isAIOn() && !this.fireDelay && !this.reloadDelay) {
-			if (this.AIShoot(monsters, map)) {
-				return true;
+			if (this.isAIOn() && !this.fireDelay && !this.reloadDelay && this.equipped != null) {
+				if (this.AIShoot(monsters, map, step)) {
+					return true;
+				}
 			}
 		}
-	}
 
-	if (!this.reloadDelay) {
-		this.updateShotStun();
+		if (!this.reloadDelay) {
+			this.updateShotStun();
+		}
+		this.updateReloadStun();
+		this.updateAnimation(animations);
+
+		if (this.health < 0) {
+			this.isAlive = false;
+		}
 	}
-	this.updateReloadStun();
-	this.updateAnimation(animations);
 }
 
 Player.prototype.isAIOn = function() {
@@ -281,8 +292,8 @@ Player.prototype.resetCurrentFrame = function() {
 	this.currentFrame = 0;
 }
 
-Player.prototype.AIShoot = function(monsters, map) {
-	var m = this.findClosestMonster(monsters);
+Player.prototype.AIShoot = function(monsters, map, step) {
+	var m = this.findClosestMonster(monsters, step, map);
 	if (this.isMonsterFound(m)) {		
 		this.aimAt(monsters[m]);
 		return this.shoot();
@@ -402,18 +413,61 @@ Player.prototype.useAmmo = function() {
 	this.equipped.ammo--;
 }
 
-Player.prototype.findClosestMonster = function(monsters) {
+Player.prototype.findClosestMonster = function(monsters, step, map) {
 	var lowest = 100000;
 	var closestMonster = 0;
 
-	for (var m = 0;  m< monsters.length; m++) {
-		if (this.isMonsterClosest(monsters[m], lowest)) {
-			if (monsters[m].isAlive()) {
-				lowest = this.getManhattanValue(monsters[m].x, monsters[m].y);
+	var losMonsters = new Array();
+
+	for (var m = 0; m < monsters.length; m++) {
+		var x = this.x;
+		var y = this.y;
+		this.aimAt(monsters[m]);
+
+		var vX = Math.cos(this.angle + 1.57079633 * step * 600);
+		var vY = Math.sin(this.angle + 1.57079633 * step * 600);
+
+		var flag = true;
+
+		// for (var s = 0; s < this.sight; s++) {
+		// 	x += vX;
+		// 	y += vY;
+			
+		// 	for (var tileY = 0; tileY < map.dynamicMap.length; tileY++) {
+		// 	 	for (var tileX = 0; tileX < map.dynamicMap[tileY].length; tileX++) {
+		// 	 		if (map.dynamicMap[tileY][tileX].tile == 3) {
+		// 				if (x > tileX * 32 && x < (tileX * 32) + 32 ) {
+		// 					if (y < tileY * 32 && y < (tileY * 32) + 32) {
+		// 						flag = false;
+		// 					}
+		// 				}
+		// 	 		}					
+		// 	 	}
+		// 	}
+		// }
+
+		if (flag) {
+			losMonsters.push(monsters[m]);
+		}
+	}
+
+	for (var m = 0;  m < losMonsters.length; m++) {
+		if (this.isMonsterClosest(losMonsters[m], lowest)) {
+			if (losMonsters[m].isAlive()) {
+				lowest = this.getManhattanValue(losMonsters[m].x, losMonsters[m].y);
 				closestMonster = m;
 			}
 		}
 	}
+
+	// for (var m = 0;  m < monsters.length; m++) {
+	// 	if (this.isMonsterClosest(monsters[m], lowest)) {
+	// 		if (monsters[m].isAlive()) {
+	// 			lowest = this.getManhattanValue(monsters[m].x, monsters[m].y);
+	// 			closestMonster = m;
+	// 		}
+	// 	}
+	// }
 
 	if (this.isWithInSight(lowest)) { return closestMonster; }
 
@@ -525,12 +579,14 @@ Player.prototype.setNewPath = function(path) {
 }
 
 Player.prototype.draw = function(context, spriteSheet, animations) {
-	context.save();
-	context.translate(this.x, this.y);
-	context.translate(this.width / 2, this.height / 2);
-	context.rotate(this.angle); 	
-	context.drawImage(spriteSheet, animations[this.currentAnimation].frames[this.currentFrame].imgX, (animations[this.currentAnimation].frames[this.currentFrame].imgY + 32) * this.player, animations[this.currentAnimation].frames[this.currentFrame].width, animations[this.currentAnimation].frames[this.currentFrame].height, -this.width / 2, -this.height / 2, 32, 32);	
-	context.restore();
+	if (this.isAlive) {
+		context.save();
+		context.translate(this.x, this.y);
+		context.translate(this.width / 2, this.height / 2);
+		context.rotate(this.angle); 	
+		context.drawImage(spriteSheet, animations[this.currentAnimation].frames[this.currentFrame].imgX, (animations[this.currentAnimation].frames[this.currentFrame].imgY + 32) * this.player, animations[this.currentAnimation].frames[this.currentFrame].width, animations[this.currentAnimation].frames[this.currentFrame].height, -this.width / 2, -this.height / 2, 32, 32);	
+		context.restore();
+	}
 }
 
 

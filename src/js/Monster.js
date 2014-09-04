@@ -23,18 +23,79 @@ function Monster(x, y, image) {
 
 	this.staggerCounter = 0;
 	this.staggered = false;
+
+	this.isAttacking = false;
+	this.attackCounter = 0;
+	this.attackedPlayer = null;
 	
 	this.playerTarget = 0; // temp
 }
 
 Monster.prototype.update = function(step, players, pathFinder, animations, sounds) {
 	if (this.isAlive()) {		
-		this.updatePath(players, pathFinder);
-		this.move(step);
-		this.updateStagger();
+		if (!this.isAttacking) {
+			this.updatePath(players, pathFinder);
+			this.move(step, players);
+		}
+		this.updateStagger(step, players);
 		if (this.isRandomMoan()) { this.randomMoan(sounds); }
-	} 
+
+		if (!this.isStaggered()) {
+			if (this.isMonsterTouchingPlayer(players) && !this.isAttacking) {
+				this.attack();
+			}	
+
+			if (this.isAttacking) {
+				this.attackCounter++;
+				//if (players[this.attackedPlayer].health >= 0) {
+					players[this.attackedPlayer].health--;
+					if (this.attackCounter > 30) {
+						this.endAttacking(players);				
+					}
+				//}
+			}
+		}
+	}
+
 	this.updateAnimation(animations);
+}
+
+Monster.prototype.facePlayer = function(player) {
+	this.angle = Math.atan2(player.y - this.y, player.x - this.x);
+
+	// Offset angle by 90 because fuck you
+	this.angle = this.angle * (180/Math.PI); 
+	this.angle -= 90;
+	this.angle = this.angle * (Math.PI/180);	
+}
+
+Monster.prototype.endAttacking = function (players) {
+	this.isAttacking = false;
+	this.stagger();
+	players[this.attackedPlayer].isAttacked = false;
+}
+
+Monster.prototype.attack = function(playerIndex) {
+	this.setAnimation(11);
+	this.attackCounter = 0;
+	this.isAttacking = true;
+
+}
+
+Monster.prototype.isMonsterTouchingPlayer = function(players) {
+	for (var p = 0; p < players.length; p ++) {
+		if (this.x + 16 > players[p].x && this.x + 16 < players[p].x + players[p].width) {
+			if (this.y + 16 > players[p].y && this.y + 16 < players[p].y + players[p].height) {
+				if (players[p].isAlive) {
+					players[p].isAttacked = true;
+					this.attackedPlayer = p;
+					return true;
+				}
+			}		
+		}
+	}
+
+	return false;
 }
 
 Monster.prototype.isAlive = function() {
@@ -48,10 +109,19 @@ Monster.prototype.updatePath = function(players,  pathFinder) {
 	}
 }
 
-Monster.prototype.move = function(step) {
+Monster.prototype.move = function(step, players) {
 	if (this.isPathAndNotStaggered()) {
 		this.faceCurrentNode();
 		this.walkForwards(step);
+	}
+
+	if (this.path == null || this.isPathFinished()) {
+		if (!this.staggered && !this.isAttacking) {
+			this.setClosestPlayerIndex(players);
+			this.facePlayer(players[this.playerTarget]);
+			this.x += (Math.cos(this.angle + 1.57079633) * step * this.speed);
+			this.y += (Math.sin(this.angle + 1.57079633) * step * this.speed);
+		}
 	}
 }
 
@@ -116,13 +186,19 @@ Monster.prototype.resetCurrentFrame = function() {
 	this.currentFrame = 0;
 }
 
-Monster.prototype.updateStagger = function() {
+Monster.prototype.updateStagger = function(step, players) {
 	if (this.isStaggered()) {
 		this.decreaseStaggerCounter();
+		this.moveBackwards(step, players);
 		if (this.isStaggerFinished()) {
 			this.endStagger();
 		}
 	}
+}
+
+Monster.prototype.moveBackwards = function(step) {
+	this.x -= (Math.cos(this.angle + 1.57079633) * step * 20);
+	this.y -= (Math.sin(this.angle + 1.57079633) * step * 20);
 }
 
 Monster.prototype.isStaggered = function() {
@@ -140,6 +216,7 @@ Monster.prototype.isStaggerFinished = function() {
 Monster.prototype.endStagger = function() {
 	this.staggered = false;
 }
+
 Monster.prototype.isRandomMoan = function() {
 	return Math.floor((Math.random() * 600) + 1) == 1;
 }
@@ -206,7 +283,7 @@ Monster.prototype.findClosestPlayer = function(players) {
 	var closestPlayer = 0;
 
 	for (var p = 0; p < players.length; p++) {
-		if (this.isPlayerClosest(players[p], lowest)) {
+		if (this.isPlayerClosest(players[p], lowest) && players[p].isAlive) {
 			lowest = this.getManhattanValue(players[p].x, players[p].y);
 			closestPlayer = p;
 		}
@@ -275,7 +352,7 @@ Monster.prototype.stagger = function() {
 }
 
 Monster.prototype.setStaggerCounter = function() {
-	this.staggerCounter = Math.floor((Math.random() * 90) + 1);
+	this.staggerCounter = 30 + (Math.floor((Math.random() * 30) + 1));
 }
 
 Monster.prototype.setNewPath = function(path) {

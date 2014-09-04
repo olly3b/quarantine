@@ -38,7 +38,7 @@ Item.prototype.initialise = function() {
 		}
 	}
 
-	if (this.itemType = 'ammo') {
+	if (this.itemType == 'ammo') {
 		if (this.itemName == 'pistol') {
 			this.ammo = 10;
 			this.clipSize = 10;

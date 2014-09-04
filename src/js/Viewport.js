@@ -12,16 +12,16 @@ function Viewport(posX, posY, width, height) {
 
 Viewport.prototype.update = function(map) {	
 	// moves camera on horizontal axis based on followed object position
-    if(this.focus.x - this.x  + this.deadZoneX > this.width)
-        this.x = this.focus.x - (this.width - this.deadZoneX);
-    else if(this.focus.x  - this.deadZoneX < this.x)
-        this.x = this.focus.x  - this.deadZoneX;
+    if(this.focus.x + 16 - this.x  + this.deadZoneX > this.width)
+        this.x = this.focus.x + 16 - (this.width - this.deadZoneX);
+    else if(this.focus.x + 16  - this.deadZoneX < this.x)
+        this.x = this.focus.x + 16  - this.deadZoneX;
     
     // moves camera on vertical axis based on followed object position
-    if(this.focus.y - this.y + this.deadZoneY > this.height)
-        this.y = this.focus.y - (this.height - this.deadZoneY);
-    else if(this.focus.y - this.deadZoneY < this.y)
-        this.y = this.focus.y - this.deadZoneY;
+    if(this.focus.y + 16 - this.y + this.deadZoneY > this.height)
+        this.y = this.focus.y + 16 - (this.height - this.deadZoneY);
+    else if(this.focus.y + 16 - this.deadZoneY < this.y)
+        this.y = this.focus.y + 16 - this.deadZoneY;
 
 	if (this.x < 0)
 		this.x = 0;

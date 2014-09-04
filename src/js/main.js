@@ -118,6 +118,8 @@ window.Game = {};
         animations[animations.length - 1].addFrame(160, 0, 32, 32, 15);
         animations[animations.length - 1].addFrame(192, 0, 32, 32, 15);
         animations[animations.length - 1].addFrame(224, 0, 32, 32, 15);
+        animations.push(new Animation(false)); // Monater attacking // 11
+        animations[animations.length - 1].addFrame(512, 96, 32, 32, 30);
 
         gunSound.push(new Audio('sound/pistol.mp3'));
         gunSound.push(new Audio('sound/pistol.mp3'));
@@ -206,11 +208,12 @@ window.Game = {};
     // Game draw function
     var draw = function() {
         clearCanvas();        
-      	map.draw(context);
+      	map.drawBackground(context);
         drawItems();
         drawMonsters();
         drawPlayers();
         drawBullets();
+        map.drawForeground(context, spriteSheet);
         drawInterface();
         drawViewPorts();
         drawButtons();
@@ -328,20 +331,19 @@ window.Game = {};
         // Main viewport inventory
         for (var i = 0; i < 3; i++) {
             if (mainViewport.focus.inventory[i] != null) {
-                if (mainViewport.focus.inventory[i].itemType = 'ammo') {
+                drawContext.drawImage(spriteSheet, mainViewport.focus.inventory[i].imageX, mainViewport.focus.inventory[i].imageY, 32, 32, 79 + (i * 32), 490, 32, 32);
+                if (mainViewport.focus.inventory[i].itemType == 'ammo' || mainViewport.focus.inventory[i].itemType == 'weapon') {
+                    
                     if (mainViewport.focus.inventory[i].itemName == 'pistol') {
-                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 79 + (i * 32), 490, 32, 32);
-                    }
-                    drawContext.fillText(mainViewport.focus.inventory[i].ammo, 94 + (i * 32), 520);
+                        drawContext.fillText(mainViewport.focus.inventory[i].ammo, 94 + (i * 32), 520);   
+                    }                    
                 }
             }
         }
         for (var i = 3; i < 6; i++) {
             if (mainViewport.focus.inventory[i] != null) {
-                if (mainViewport.focus.inventory[i].itemType = 'ammo') {
-                    if (mainViewport.focus.inventory[i].itemName == 'pistol') {
-                        drawContext.drawImage(spriteSheet, 32, 128, 32, 32, 79 + ((i - 3) * 32), 522, 32, 32);
-                    }
+                drawContext.drawImage(spriteSheet, mainViewport.focus.inventory[i].imageX, mainViewport.focus.inventory[i].imageY, 32, 32, 79 + ((i - 3) * 32), 522, 32, 32);
+                if (mainViewport.focus.inventory[i].itemType == 'ammo' || mainViewport.focus.inventory[i].itemType == 'weapon') {
                      drawContext.fillText(mainViewport.focus.inventory[i].ammo, 94 + ((i - 3) * 32), 552);
                 }
             }
@@ -534,7 +536,18 @@ window.Game = {};
                                     cursorItem.ammo += mainViewport.focus.inventory[i].ammo;
                                     mainViewport.focus.inventory[i] = null;
                                 }
+                            } else {
+                                cursorItem.ammo += mainViewport.focus.inventory[i].ammo;
+                                mainViewport.focus.inventory[i] = null;
                             }
+                        } else if (cursorItem.itemType == 'weapon') {
+                            var temp = mainViewport.focus.inventory[i];
+                            mainViewport.focus.inventory[i] = cursorItem;
+                            cursorItem = temp;
+                        } else {
+                            var temp = mainViewport.focus.inventory[i];
+                            mainViewport.focus.inventory[i] = cursorItem;
+                            cursorItem = temp;
                         }
                     }
                 } else {
@@ -547,7 +560,7 @@ window.Game = {};
                                 cursorItem = mainViewport.focus.inventory[i];
                                 mainViewport.focus.inventory[i] = null;
                             }
-                        } else {
+                        } else {                            
                             cursorItem = mainViewport.focus.inventory[i];
                             mainViewport.focus.inventory[i] = null;
                         }
@@ -558,25 +571,35 @@ window.Game = {};
 
         // Dropping ammo on equipped item
         if (controls.mouseX > 10 && controls.mouseX < 74 && controls.mouseY > 491 && controls.mouseY < 555) {
-            if (cursorItem.itemType == 'ammo' && mainViewport.focus.equipped.itemType == 'weapon') {
-                if (cursorItem.itemName == 'pistol' && mainViewport.focus.equipped.itemName == 'pistol') {
-                    var t = mainViewport.focus.equipped.clipSize - mainViewport.focus.equipped.ammo;
-                    if (cursorItem.ammo > t) {
-                        cursorItem.ammo -= t;
-                        mainViewport.focus.equipped.ammo += t;
-                        mainViewport.focus.startReloadStun();
-                        mainViewport.focus.setAnimation(10);
-                        var derp = 0;
-                    } else {
-                        mainViewport.focus.equipped.ammo += cursorItem.ammo;
-                        cursorItem = null;
-                        mainViewport.focus.startReloadStun();
-                        mainViewport.focus.setAnimation(10);
-                    }                
+            if (cursorItem != null) {// && mainViewport.focus.equipped != null) {
+                if (cursorItem.itemType == 'ammo' && mainViewport.focus.equipped.itemType == 'weapon') {
+                    if (cursorItem.itemName == 'pistol' && mainViewport.focus.equipped.itemName == 'pistol') {
+                        var t = mainViewport.focus.equipped.clipSize - mainViewport.focus.equipped.ammo;
+                        if (cursorItem.ammo > t) {
+                            cursorItem.ammo -= t;
+                            mainViewport.focus.equipped.ammo += t;
+                            mainViewport.focus.startReloadStun();
+                            mainViewport.focus.setAnimation(10);                            
+                        } else {
+                            mainViewport.focus.equipped.ammo += cursorItem.ammo;
+                            cursorItem = null;
+                            mainViewport.focus.startReloadStun();
+                            mainViewport.focus.setAnimation(10);
+                        }                
+                    }
                 }
-
+                if (cursorItem.itemType == 'weapon' && !this.reloading) {
+                    var temp = mainViewport.focus.equipped;
+                    mainViewport.focus.equipped = cursorItem;
+                    cursorItem = temp;
+                }
+            } else {
+                cursorItem = mainViewport.focus.equipped;
+                mainViewport.focus.equipped = null;
             }
         }
+
+
 
         // Dropping items
         if (controls.mouseX > mainViewport.posX && controls.mouseX < mainViewport.posX + mainViewport.width) {
